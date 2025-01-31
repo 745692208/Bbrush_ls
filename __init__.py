@@ -21,12 +21,12 @@ from .ops import brush_switch
 importlib.reload(brush_switch)
 
 bl_info = {
-    "name": "Bbrush",
+    "name": "Bbrush_ls",
     "author": "AIGODLIKE Community: 小萌新, levosaber",
     "version": (1, 2, 7),
     "blender": (4, 0, 0),
     "location": "Entering the sculpt mode will be displayed in the top bar",
-    "description": "",
+    "description": "在原版1.2.7的基础上修改成可支持4.3, 不支持向下兼容。",
     "category": "AIGODLIKE",
 }
 
