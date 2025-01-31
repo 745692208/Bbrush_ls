@@ -1,11 +1,10 @@
-import inspect
 from functools import cache
 
 import bpy
 
 from ..utils.public import all_operator_listen, PublicClass
 
-G_UiReplaceDit = {}
+UiReplaceFunc = None
 
 
 @cache
@@ -21,19 +20,34 @@ def draw_restart_button(layout):
 
 
 def append_top_editor_menus(self, context):
+    pref = PublicClass.pref_()
+
     layout = self.layout
     region = context.region
     screen = context.screen
-    right = region.alignment != "RIGHT"
 
-    pref = PublicClass.pref_()
+    # layout.label(text=self.__class__.__name__)
+    # layout.label(text=region.alignment)
+    # layout.label(text=pref.alignment)
+
+    fs = screen.show_fullscreen
+    cn = self.__class__.__name__
+    if pref.alignment == "LEFT":
+        show = cn == "TOPBAR_MT_editor_menus" or (cn == "TOPBAR_HT_upper_bar" and region.alignment == "TOP" and pref.replace_top_bar and pref.sculpt)
+    elif pref.alignment == "CENTER":
+        show = cn == "TOPBAR_HT_upper_bar" and region.alignment == "TOP"
+    elif pref.alignment == "RIGHT":
+        show = cn == "TOPBAR_HT_upper_bar" and region.alignment == "RIGHT"
+    else:
+        show = False
+
     sculpt = pref.sculpt or pref.is_sculpt_mode
-
-    if right and sculpt:
-
+    if show and sculpt:
         sub_row = layout.row(align=True)
-        sub_row.alert = True
-        sub_row.prop(pref, "sculpt", emboss=False, icon="EVENT_ESC" if pref.sculpt else "SCULPTMODE_HLT")
+        icon = "EVENT_ESC" if pref.sculpt else "SCULPTMODE_HLT"
+        text = "Bbrush" if pref.show_text else ""
+        if not pref.always_use_sculpt_mode:
+            sub_row.prop(pref, "sculpt", text=text, icon=icon)
         if pref.sculpt:
             sub_row.prop(pref, "always_use_sculpt_mode", emboss=True, icon="AUTO", text="")
 
@@ -49,9 +63,10 @@ def append_top_editor_menus(self, context):
                 emboss=True,
             )
             row.prop(pref, "show_shortcut_keys", emboss=True, icon="EVENT_K", text="")
-            draw_restart_button(row)
+            if pref.replace_top_bar:
+                draw_restart_button(row)
 
-        if screen.show_fullscreen and pref.sculpt:
+        if fs and pref.sculpt and pref.replace_top_bar:
             layout.operator(
                 "screen.back_to_previous",
                 icon="SCREEN_BACK",
@@ -59,62 +74,37 @@ def append_top_editor_menus(self, context):
             )
 
 
-def __set_menu_fun(origin_menu_class, origin_menu_class_path, replace, replace_func, replace_func_path, menu_key):
-    tmp_draw_funcs_list = []
-    for i in origin_menu_class.draw._draw_funcs:
-        func_path_ = inspect.getfile(i)
-        if func_path_ == origin_menu_class_path and replace:
-            G_UiReplaceDit[func_path_ + " draw" + origin_menu_class.__name__] = i
-            tmp_draw_funcs_list.append(replace_func)
-        elif func_path_ == replace_func_path and (not replace):
-            tmp_draw_funcs_list.append(G_UiReplaceDit[menu_key])
-        else:
-            tmp_draw_funcs_list.append(i)
-    origin_menu_class.draw._draw_funcs = tmp_draw_funcs_list
-    del tmp_draw_funcs_list
-
-
-def menu_item_replace(origin_menu_class, replace_func, replace):
-    """
-    :Menu_class     需要被替换的菜单类
-    :replace_func   替换的菜单绘制方法
-    :replace        替换的布尔值,真则替换,反之还原
-    """
-
-    global G_UiReplaceDit
-    origin_menu_class_path = inspect.getfile(origin_menu_class)
-    replace_func_path = inspect.getfile(replace_func)
-
-    menu_key = origin_menu_class_path + " draw" + origin_menu_class.__name__
-
-    if getattr(origin_menu_class, "draw", False) and (menu_key not in G_UiReplaceDit):
-        G_UiReplaceDit[menu_key] = origin_menu_class.draw
-
-    if bpy.types.Header in origin_menu_class.__bases__:
-
-        if replace:
-            origin_menu_class.draw = replace_func
-        else:
-            if menu_key in G_UiReplaceDit:
-                origin_menu_class.draw = G_UiReplaceDit[menu_key]
-    elif getattr(origin_menu_class.draw, "_draw_funcs", False):  # 面板类的
-        __set_menu_fun(origin_menu_class, origin_menu_class_path, replace, replace_func, replace_func_path, menu_key)
-
-
 def replace_top_bar(replace: bool):
-    menu_item_replace(bpy.types.TOPBAR_HT_upper_bar, append_top_editor_menus, replace)
+    global UiReplaceFunc
+    cls = bpy.types.TOPBAR_HT_upper_bar
+
+    if UiReplaceFunc is None:
+        UiReplaceFunc = cls.draw
+
+    if replace:
+        cls.draw = append_top_editor_menus
+    else:
+        cls.draw = UiReplaceFunc
 
 
 def update_top_bar():
     pref = PublicClass.pref_()
-    replace_top_bar(pref.sculpt)
+
+    if pref.replace_top_bar:
+        show = pref.sculpt
+    else:
+        show = False
+    replace_top_bar(show)
 
 
 def register():
-    bpy.types.TOPBAR_MT_editor_menus.append(append_top_editor_menus)  # 顶部标题栏
+    bpy.types.TOPBAR_MT_editor_menus.prepend(append_top_editor_menus)
+    bpy.types.TOPBAR_HT_upper_bar.append(append_top_editor_menus)
 
 
 def unregister():
     if hasattr(bpy.types, "TOPBAR_MT_editor_menus"):
         bpy.types.TOPBAR_MT_editor_menus.remove(append_top_editor_menus)
+    if hasattr(bpy.types, "TOPBAR_HT_upper_bar"):
+        bpy.types.TOPBAR_HT_upper_bar.remove(append_top_editor_menus)
     replace_top_bar(False)

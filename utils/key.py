@@ -2,37 +2,57 @@ brush_stroke = "sculpt.brush_stroke"
 mask_lasso_gesture = "paint.mask_lasso_gesture"
 hide_show = "paint.hide_show"
 select_lasso = "view3d.select_lasso"
-bbrush_switch = "bbrush.bbrush_switch"
 f_active = {"active": False}
 
 view = "3D View Tool"
 sculpt_modify_keymaps = {
     "Sculpt": {
-        ("wm.call_panel", (("name", "VIEW3D_PT_sculpt_context_menu"),)): {"active": False},
-        (brush_stroke, ()): {"active": False},
-        (brush_stroke, (("mode", 0),)): {"active": False},
-        (brush_stroke, (("mode", 1),)): {"active": False},
-        (brush_stroke, (("mode", 2),)): {"active": False},
-        (mask_lasso_gesture, ()): {"active": False},
+        ("wm.call_panel", (("name", "VIEW3D_PT_sculpt_context_menu"),)): {"value": "RELEASE"},
+        (brush_stroke, ()): f_active,
+        (brush_stroke, (("mode", 0),)): f_active,
+        (brush_stroke, (("mode", 1),)): f_active,
+        (brush_stroke, (("mode", 2),)): f_active,
+        (mask_lasso_gesture, ()): f_active,
         (mask_lasso_gesture, (("value", 1.0),)): {"ctrl": True},
         (mask_lasso_gesture, (("value", 0.0),)): {"alt": True},
     },
-    f"{view}: Sculpt, Box Mask": {("paint.mask_box_gesture", (("value", 1.0),)): {"ctrl": True, "active": False}, ("paint.mask_box_gesture", (("value", 0.0),)): {"alt": True, "active": False}},
-    f"{view}: Sculpt, Lasso Mask": {(mask_lasso_gesture, (("value", 1.0),)): {"ctrl": True}, (mask_lasso_gesture, (("value", 0.0),)): {"alt": True}},
-    f"{view}: Sculpt, Line Mask": {("paint.mask_line_gesture", (("value", 1.0),)): {"ctrl": True}, ("paint.mask_line_gesture", (("value", 0.0),)): {"alt": True}},
-    f"{view}: Sculpt, Box Hide": {(hide_show, (("action", 1),)): {"active": False}, (hide_show, (("action", 0),)): {"active": False}, (hide_show, (("action", 1), ("area", 2))): {"active": False}},
-    f"{view}: Sculpt, Lasso Trim": {("sculpt.trim_lasso_gesture", ()): {"ctrl": True, "shift": True}},
-    f"{view}: Sculpt, Box Trim": {("sculpt.trim_box_gesture", ()): {"ctrl": True, "shift": True}},
-    f"{view}: Sculpt, Line Project": {("sculpt.project_line_gesture", ()): {"ctrl": True, "shift": True}},
-    "Screen": {("sculpt.project_line_gesture", ()): {"ctrl": True, "shift": True}},
+    f"{view}: Sculpt, Box Mask": {
+        ("paint.mask_box_gesture", (("value", 1.0),)): {"ctrl": True, "active": False},
+        ("paint.mask_box_gesture", (("value", 0.0),)): {"alt": True, "active": False},
+    },
+    f"{view}: Sculpt, Lasso Mask": {
+        (mask_lasso_gesture, (("value", 1.0),)): {"ctrl": True},
+        (mask_lasso_gesture, (("value", 0.0),)): {"alt": True},
+    },
+    f"{view}: Sculpt, Line Mask": {
+        ("paint.mask_line_gesture", (("value", 1.0),)): {"ctrl": True},
+        ("paint.mask_line_gesture", (("value", 0.0),)): {"alt": True},
+    },
+    f"{view}: Sculpt, Box Hide": {
+        (hide_show, (("action", 1),)): f_active,
+        (hide_show, (("action", 0),)): f_active,
+        (hide_show, (("action", 1), ("area", 2))): f_active,
+    },
+    f"{view}: Sculpt, Lasso Trim": {
+        ("sculpt.trim_lasso_gesture", ()): {"ctrl": True, "shift": True},
+    },
+    f"{view}: Sculpt, Box Trim": {
+        ("sculpt.trim_box_gesture", ()): {"ctrl": True, "shift": True},
+    },
+    f"{view}: Sculpt, Line Project": {
+        ("sculpt.project_line_gesture", ()): {"ctrl": True, "shift": True},
+    },
+    "Screen": {
+        ("sculpt.project_line_gesture", ()): {"ctrl": True, "shift": True},
+    },
     "3D View": {
-        (select_lasso, (("mode", 1),)): {"active": False},
-        (select_lasso, (("mode", 2),)): {"active": False},
-        (select_lasso, ()): {"active": False},
-        ("view3d.cursor3d", ()): {"active": False},
-        ("transform.translate", ()): {"active": False},
-        ("emm.hdr_rotation", ()): {"active": False},
-        ("view3d.select", ()): {"active": False},
+        (select_lasso, (("mode", 1),)): f_active,
+        (select_lasso, (("mode", 2),)): f_active,
+        (select_lasso, ()): f_active,
+        ("view3d.cursor3d", ()): f_active,
+        ("transform.translate", ()): f_active,
+        ("emm.hdr_rotation", ()): f_active,
+        ("view3d.select", ()): f_active,
     },
 }
 
@@ -42,6 +62,7 @@ empty_window_modal = {**empty_window, "modal": True}
 l_any = {"type": "LEFTMOUSE", "value": "ANY", "any": True}
 bbrush_mask = "bbrush.mask"
 bbrush_sculpt = "bbrush.bbrush_sculpt"
+bbrush_switch = "bbrush.bbrush_switch"
 
 bbrush_key_items = (
     (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK", "any": False}, {"properties": [("is_click", True)]}),
@@ -51,8 +72,6 @@ bbrush_key_items = (
     (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": False, "alt": True}, {"properties": [("is_click", False)]}),
     (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK", "any": True, "ctrl": True}, {"properties": [("is_click", True)]}),
     (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": True, "ctrl": True}, {"properties": [("is_click", False)]}),
-    (bbrush_mask, {"type": "RIGHTMOUSE", "value": "CLICK", "any": True, "ctrl": True}, {"properties": [("is_click", True)]}),
-    (bbrush_mask, {"type": "RIGHTMOUSE", "value": "CLICK_DRAG", "any": True, "ctrl": True}, {"properties": [("is_click", False)]}),
 )
 
 sculpt_keys_items = (
@@ -99,12 +118,12 @@ sculpt_keys_items = (
         empty_window,
         {
             "items": [
-                (bbrush_switch, {"type": "LEFT_CTRL", "value": "ANY"}, None),
-                (bbrush_switch, {"type": "LEFT_ALT", "value": "ANY"}, None),
-                (bbrush_switch, {"type": "LEFT_SHIFT", "value": "ANY"}, None),
                 *bbrush_key_items,
+                (bbrush_switch, {"type": "LEFT_CTRL", "value": "ANY"}, None),
+                # (bbrush_switch, {"type": "LEFT_ALT", "value": "ANY"}, None),  # 避免`alt+数字键`切换笔刷快捷键冲突. 也没发现有其它作用, 直接屏蔽.
+                (bbrush_switch, {"type": "LEFT_SHIFT", "value": "ANY"}, None),
                 ("object.transfer_mode", {"type": "LEFTMOUSE", "value": "CLICK", "alt": True}, None),
-                ("view3d.rotate", {"type": "RIGHTMOUSE", "value": "PRESS"}, None),
+                ("view3d.rotate", {"type": "RIGHTMOUSE", "value": "CLICK_DRAG"}, None),
                 ("view3d.move", {"type": "RIGHTMOUSE", "value": "PRESS", "alt": True}, None),
                 ("view3d.move", {"type": "MIDDLEMOUSE", "value": "PRESS", "alt": True}, None),
                 ("view3d.zoom", {"type": "RIGHTMOUSE", "value": "PRESS", "ctrl": True}, None),
@@ -250,6 +269,7 @@ def modify_keymap(keymap_hash_table, modify_bool):
 
 
 def close_conflict_keys1(kmis_state=None, un=False):
+    """My 遍历所有kmi, 关闭视图操作, 避免与Maya系视图操控冲突, 如那套`行业标准`快捷键"""
     import bpy
 
     a = [
@@ -273,6 +293,7 @@ def close_conflict_keys1(kmis_state=None, un=False):
 
 
 def close_conflict_keys(is_unregister=False):
+    """My 遍历所有kmi, 关闭视图操作, 避免与Maya系视图操控冲突, 如那套`行业标准`快捷键"""
     import bpy
 
     a = [
@@ -294,11 +315,11 @@ def change_keymap(is_modify: bool):
 
 def register():
     close_conflict_keys()
-    keymap_register(sculpt_keys_items)
     change_keymap(True)
+    keymap_register(sculpt_keys_items)
 
 
 def unregister():
     close_conflict_keys(True)
-    keymap_unregister(sculpt_keys_items)
     change_keymap(False)
+    keymap_unregister(sculpt_keys_items)

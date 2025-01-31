@@ -30,7 +30,7 @@ def bbrush_translate():
     return dict(
         idname="bbrush.translate",
         label="BBrush Move BrushTool",
-        description="用于移动雕刻原点的操作控制柄",
+        description="Control handle for moving the sculpting origin",
         icon="ops.transform.translate",
         cursor="EYEDROPPER",
         widget=None,
@@ -43,8 +43,8 @@ def bbrush_translate():
 def bbrush_polygon_mask():
     return dict(
         idname="bbrush.polygon_mask",
-        label="多边形绘制遮罩",
-        description="绘制多边形遮罩",
+        label="Polygon mask",
+        description="Draw polygonal mask",
         icon=get_dat_icon("brush.sculpt.polygons_mask"),
         cursor="EYEDROPPER",
         widget=None,
@@ -56,8 +56,8 @@ def bbrush_polygon_mask():
 def bbrush_square_mask():
     return dict(
         idname="bbrush.square_mask",
-        label="方形绘制遮罩",
-        description="绘制方形遮罩",
+        label="Square mask",
+        description="Draw square mask",
         icon=get_dat_icon("brush.sculpt.square_mask"),
         cursor="EYEDROPPER",
         widget=None,
@@ -69,8 +69,8 @@ def bbrush_square_mask():
 def bbrush_circular_mask():
     return dict(
         idname="bbrush.circular_mask",
-        label="圆形绘制遮罩",
-        description="绘制圆形遮罩",
+        label="Circular mask",
+        description="Draw circular mask",
         icon=get_dat_icon("brush.sculpt.circular_mask"),
         cursor="EYEDROPPER",
         widget=None,
@@ -82,8 +82,8 @@ def bbrush_circular_mask():
 def bbrush_ellipse_mask():
     return dict(
         idname="bbrush.ellipse_mask",
-        label="椭圆遮罩",
-        description="绘制椭圆遮罩",
+        label="Ellipse mask",
+        description="Draw elliptical mask",
         icon=get_dat_icon("brush.sculpt.ellipse_mask"),
         cursor="EYEDROPPER",
         widget=None,
@@ -104,11 +104,20 @@ def bbrush_mask_border():
 
 
 toolbar = ToolSelectPanelHelper._tool_class_from_space_type("VIEW_3D")._tools["SCULPT"].copy()
-builtin_mask_brush = "builtin_brush.Mask"
+builtin_mask_brush = "builtin_brush.mask"
+"""builtin_brush.mask"""
 
 
 class BrushTool:
     active_brush: dict
+    """记录活动笔刷的名称
+    ```python
+    {
+        "SCULPT": "builtin.brush",
+        "MASK": builtin_mask_brush,
+        "HIDE": "builtin.box_hide",
+    }
+    ```"""
     toolbar_dit: dict
 
     mask_brush = (
@@ -130,6 +139,25 @@ class BrushTool:
         cls.init_all_brush()
 
     @classmethod
+    def tool_ops(cls, tools):
+        sculpt = cls.toolbar_dit["SCULPT"]
+
+        from collections.abc import Iterable
+
+        for tool in tools:
+            if isinstance(tool, ToolDef):
+                cls.append_brush(tool)
+            elif isinstance(tool, Iterable):
+                cls.tool_ops(tool)
+            elif getattr(tool, "__call__", False):
+                # 4.3 报错 AttributeError: '_RestrictContext' object has no attribute 'sculpt_object'
+                # cls.tool_ops(tool(bpy.context))
+                pass
+            else:
+                if tool != sculpt[-1]:
+                    sculpt.append(tool)
+
+    @classmethod
     def init_all_brush(cls):
         cls.toolbar_dit = {
             "SCULPT": [],
@@ -138,23 +166,9 @@ class BrushTool:
             "ORIGINAL_TOOLBAR": toolbar.copy(),
         }
 
-        sculpt = cls.toolbar_dit["SCULPT"]
         mask = cls.toolbar_dit["MASK"]
-        from collections.abc import Iterable
 
-        def tool_ops(tools):
-            for tool in tools:
-                if isinstance(tool, ToolDef):
-                    cls.append_brush(tool)
-                elif isinstance(tool, Iterable):
-                    tool_ops(tool)
-                elif getattr(tool, "__call__", False):
-                    tool_ops(tool(bpy.context))
-                else:
-                    if tool != sculpt[-1]:
-                        sculpt.append(tool)
-
-        tool_ops(toolbar)
+        cls.tool_ops(toolbar)
 
         mask.extend(
             [
@@ -180,7 +194,7 @@ class BrushTool:
     @classmethod
     def init_active_brush(cls):
         cls.active_brush = {  # 记录活动笔刷的名称
-            "SCULPT": "builtin_brush.Draw",
+            "SCULPT": "builtin.brush",
             "MASK": builtin_mask_brush,
             "HIDE": "builtin.box_hide",
         }

@@ -1,5 +1,6 @@
 import logging
 import os
+from bpy.app.translations import pgettext as _
 
 
 def log_path():
@@ -25,5 +26,5 @@ try:
     log.addHandler(_file_handler)
     _file_handler.setFormatter(_formatter)
 except Exception as e:
-    print("设置Log文件路径错误")
+    print(_("Setting log file path error"))
     print(e.args)

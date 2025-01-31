@@ -1,6 +1,7 @@
 import bpy
 from mathutils import Vector
 
+from .sculpt_operator import normal_brush_handle
 from ..utils.log import log
 from ..utils.public import PublicOperator, PublicDraw
 
@@ -19,9 +20,24 @@ class OperatorProperty(PublicOperator, PublicDraw):
     def is_annotate_brush(self):
         return self.active_tool_name in self.annotate_brush
 
+    """
     @property
     def mouse_is_in_model_up(self):
+        if self.is_annotate_brush:
+            return True
+        
+        # 优化, `ray_cast`比`深度检测`开销要低, 但对在雕刻模式下, 含有多级别细分的对象无效.
+        if [i for i in bpy.context.sculpt_object.modifiers if i.type == "MULTIRES"]:
+            r = self.get_mouse_location_ray_cast(self.context, self.event)
+        else:
+            r = self.ray_cast(self.context, self.event)
+        return r
+
         return self.is_annotate_brush or self.get_mouse_location_ray_cast(self.context, self.event)
+    """
+
+    def mouse_in_area_in(self, event, area):
+        return True if self.is_annotate_brush else super().mouse_in_area_in(event, area)
 
     @property
     def is_hide_mode(self):
@@ -70,7 +86,7 @@ class DepthUpdate(OperatorProperty):
         y = 1 / context.region.height * value[1]
 
         value = self.pref.depth_scale = self.start_buffer_scale + max(x, y) * 2
-        context.area.header_text_set(f"深度图缩放值 {value}")
+        context.area.header_text_set(f"Depth map zoom value {value}")
 
     def init_depth(self):
         from ..ui.draw_depth import DrawDepth
@@ -81,9 +97,14 @@ class DepthUpdate(OperatorProperty):
 
 class BBrushSculpt(DepthUpdate):
     bl_idname = "bbrush.bbrush_sculpt"
-    bl_label = "Bbrush雕刻"
-    bl_description = "使用Zbrush的方式雕刻"
+    bl_label = "Bbrush sculpting"
+    bl_description = "Sculpting in the style of Zbrush"
     bl_options = {"REGISTER"}
+
+    def __init__(self):
+        self.in_modal: bool = None
+        """光标在模型对象上, is_hit."""
+        self.mouse_move_count = None
 
     def invoke(self, context, event):
 
@@ -95,17 +116,18 @@ class BBrushSculpt(DepthUpdate):
         self.start_mouse = self.mouse_co
 
         self.start_buffer_scale = self.pref.depth_scale
+
         if self.is_3d_view:
+            self.in_modal = self.mouse_is_in_model_up
             context.window_manager.modal_handler_add(self)
             return {"RUNNING_MODAL"}
         else:
             self.report({"WARNING"}, "Active space must be a View3d")
             return {"CANCELLED"}
 
-    def modal(self, context, event):
+    def modal(self, context: bpy.types.Context, event: bpy.types.Event):
         self.init_modal(context, event)
         self.tag_redraw(context)
-
         try:
             if self.is_exit:  # 退出模态操作
                 context.area.header_text_set(None)
@@ -117,29 +139,24 @@ class BBrushSculpt(DepthUpdate):
                 self.depth_scale_update(context, event)
                 return {"RUNNING_MODAL"}
             else:
-                return self.modal_handle()
+                return self.modal_handle(event)
         except Exception as e:
             log.error(e.args)
             return {"FINISHED"}
 
-    def modal_handle(self):
-        in_modal = self.mouse_is_in_model_up
-        if in_modal:
+    def modal_handle(self, event: bpy.types.Event):
+        # print(f"{self.name} -> is_click: {self.is_click}, is_hit: {self.in_modal}")
+        if self.in_modal:
             if self.only_alt:
                 self.smooth_brush_handle()
-            else:
-                bpy.ops.sculpt.brush_stroke("INVOKE_DEFAULT", True, mode="NORMAL")
+            elif event.value_prev == "PRESS":
+                normal_brush_handle()
         else:
             if self.only_alt:
-                bpy.ops.view3d.move(
-                    "INVOKE_DEFAULT",
-                    True,
-                )
+                bpy.ops.view3d.move("INVOKE_DEFAULT", True)
             else:
-                bpy.ops.view3d.rotate(
-                    "INVOKE_DEFAULT",
-                    True,
-                )
+                if event.value_prev != "RELEASE":
+                    bpy.ops.view3d.rotate("INVOKE_DEFAULT", True)
         return {"FINISHED"}
 
     def smooth_brush_handle(self):

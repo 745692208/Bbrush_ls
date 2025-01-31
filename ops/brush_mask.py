@@ -3,22 +3,14 @@ from time import time
 import bpy
 import gpu
 import numpy as np
+from bpy.app.translations import pgettext as _
 from bpy.props import BoolProperty
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 
+from .sculpt_operator import sculpt_invert_hide_face
 from ..utils.log import log
 from ..utils.public import PublicOperator, PublicDraw
-
-
-def draw_line(vertices, color, line_width=1):
-    shader = gpu.shader.from_builtin("UNIFORM_COLOR")
-    gpu.state.line_width_set(line_width)
-    batch = batch_for_shader(shader, "LINE_STRIP", {"pos": vertices})
-    shader.bind()
-    shader.uniform_float("color", color)
-    batch.draw(shader)
-    gpu.state.line_width_set(1.0)
 
 
 def get_circular(x, y, segments=64):
@@ -32,8 +24,8 @@ def get_circular(x, y, segments=64):
 
 
 class MaskProperty(PublicOperator, PublicDraw):
-    use_front_faces_only: BoolProperty(name="仅前面的面")
-    is_click: BoolProperty(name="按键操作是单击", default=True, options={"SKIP_SAVE"})
+    use_front_faces_only: BoolProperty(name=_("Only the front faces"))
+    is_click: BoolProperty(name=_("The key operation is a single click"), default=True, options={"SKIP_SAVE"})
 
     is_esc = False
     alpha = 0.9
@@ -57,7 +49,7 @@ class MaskProperty(PublicOperator, PublicDraw):
     is_box_mode = False
 
     def box_mode_update(self):
-        brush = self.active_tool_name in ("builtin.box_mask", "builtin.box_hide", "builtin_brush.Mask")
+        brush = self.active_tool_name in ("builtin.box_mask", "builtin.box_hide", "builtin_brush.mask")
         self.is_box_mode = brush
 
     @property
@@ -82,11 +74,7 @@ class MaskProperty(PublicOperator, PublicDraw):
 
     @property
     def is_mask_brush(self):
-        return self.active_tool_name == "builtin_brush.Mask"
-
-    @property
-    def mouse_is_in_model_up(self):
-        return self.get_mouse_location_ray_cast(self.context, self.event)
+        return self.active_tool_name == "builtin_brush.mask"
 
     @property
     def polygon_not_pos(self):
@@ -133,20 +121,12 @@ class MaskProperty(PublicOperator, PublicDraw):
     @property
     def is_normal_invoke(self):
         mask = self.is_lasso_mask_brush or self.is_line_mask_brush
-        hide = self.is_line_project_brush or self.is_box_trim_brush or self.is_lasso_trim_brush
-        return mask or hide
+        trim = self.is_box_trim_brush or self.is_lasso_trim_brush
+        hide = self.is_line_project_brush
+        return mask or hide or trim
 
 
 class MaskClick(MaskProperty):
-
-    @staticmethod
-    def invert_sculpt_hide_face():
-        is_3_6_up_version = bpy.app.version >= (3, 6, 0)
-        if is_3_6_up_version:
-            bpy.ops.sculpt.face_set_invert_visibility()
-        else:
-            mode = "TOGGLE" if is_3_6_up_version else "INVERT"
-            bpy.ops.sculpt.face_set_change_visibility("EXEC_DEFAULT", True, mode="INVERT")
 
     def mask_click(self):
         in_model = self.mouse_is_in_model_up
@@ -167,9 +147,9 @@ class MaskClick(MaskProperty):
                 sculpt.face_set_change_visibility(mode="TOGGLE")
         elif self.ctrl_shift:
             if in_model:
-                self.invert_sculpt_hide_face()
+                sculpt_invert_hide_face()
             else:
-                paint.hide_show("EXEC_DEFAULT", True, action="SHOW", area="ALL")
+                paint.hide_show("EXEC_DEFAULT", True, action="SHOW", area="Inside")
         self.handler_remove()
         return {"FINISHED"}
 
@@ -273,11 +253,11 @@ class MaskDrawArea(MaskClick):
         if self.is_box_mode:
             self.draw_box()
         elif self.is_ellipse_mask_brush:
-            draw_line(self.ellipse_data, self.color, line_width=2)
+            self.draw_line(self.ellipse_data, self.color, line_width=2)
         elif self.is_circular_mode:
-            draw_line(self._circular_data, self.color, line_width=2)
+            self.draw_line(self._circular_data, self.color, line_width=2)
         elif self.is_polygon_mode and self.mouse_pos:
-            draw_line(self.poly_gon_draw, self.color, line_width=2)
+            self.draw_line(self.poly_gon_draw, self.color, line_width=2)
         gpu.state.blend_set("NONE")
 
 
@@ -367,13 +347,13 @@ class MaskClickDrag(MaskDrawArea):
         elif self.ctrl_alt:
             paint.mask_flood_fill("EXEC_DEFAULT", True, mode="VALUE", value=1)
         elif self.ctrl_shift_alt or self.ctrl_shift:
-            self.invert_sculpt_hide_face()
+            sculpt_invert_hide_face()
 
     def event_move_update(self):
         """
         mouse_co_tmp: Vector  # 临时位置,记录空格按下时的鼠标位置
         """
-        have_tmp = getattr(self, "mouse_co_tmp", False)
+        have_tmp = getattr(self, "mouse_co_tmp", None)
 
         if have_tmp:
             move = have_tmp - self.mouse_co
@@ -404,7 +384,7 @@ class MaskClickDrag(MaskDrawArea):
         try:
             return self.get_area_ray_cast(x, y, w, h)
         except ValueError as v:
-            log.info(f"{v.args}\n获取形状投射错误")
+            log.info(f"{v.args}\nError in acquiring shape projection")
 
     def polygons_mask(self):
         click_time = bpy.context.preferences.inputs.mouse_double_click_time
@@ -445,8 +425,8 @@ class MaskClickDrag(MaskDrawArea):
 
 class BBrushMask(MaskClickDrag):
     bl_idname = "bbrush.mask"
-    bl_label = "Bbrush遮罩"
-    bl_description = "遮罩笔刷"
+    bl_label = "Bbrush mask"
+    bl_description = "Mask brush"
     bl_options = {"REGISTER"}
 
     def invoke(self, context, event):
@@ -454,7 +434,7 @@ class BBrushMask(MaskClickDrag):
         self.cache_clear()  # 清
         self.start_time = time()
         self.start_mouse = self.mouse_co
-        self.box_mode_update()
+        self.box_mode_update()  # 更新框模式
         log.debug(f"invoke {self.start_mouse, self.mouse_co}")
         self.tag_redraw(context)
         log.debug(self.bl_idname)

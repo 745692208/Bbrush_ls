@@ -1,3 +1,6 @@
+from functools import cache
+from os.path import basename, dirname, realpath
+from bpy.app.translations import pgettext as _
 import blf
 import bpy
 import gpu
@@ -5,10 +8,9 @@ import numpy as np
 from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
-from functools import cache
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector, geometry
-from os.path import basename, dirname, realpath
+from bpy_extras import view3d_utils
 
 from .log import log
 from ..src.shortcut_keys import SHORTCUT_KEYS
@@ -94,6 +96,7 @@ class PublicEvent(PublicData):
 
     @property
     def event_is_press(self):
+        """是按下的状态吧？"""
         return self.event_value("PRESS")
 
     @property
@@ -174,7 +177,11 @@ class PublicMath(PublicEvent):
         if "sss" in bpy.data.meshes:
             bpy.data.meshes.remove(bpy.data.meshes["sss"])
         me = bpy.data.meshes.new("sss")
-        me.from_pydata(vertices=[v.to_3d() / 100 for v in circle], edges=[(i, i + 1) for i in range(len(circle) - 1)], faces=[])
+        me.from_pydata(
+            vertices=[v.to_3d() / 100 for v in circle],
+            edges=[(i, i + 1) for i in range(len(circle) - 1)],
+            faces=[],
+        )
         me.update()
 
         import bmesh
@@ -201,14 +208,19 @@ class PublicMath(PublicEvent):
         """提取多边形的外边框"""
         # [v1, v2, v3, v1]
         pos = cls.to_vector(pos)
-        pos_neibor = {k: [i - 1 if (i - 1) != -1 else len(pos) - 1, i + 1 if (i + 1) != len(pos) else 0] for i, k in enumerate(pos)}
+        pos_neibor = {
+            k: [
+                i - 1 if (i - 1) != -1 else len(pos) - 1,
+                i + 1 if (i + 1) != len(pos) else 0,
+            ]
+            for i, k in enumerate(pos)
+        }
 
         convex_hull_2d = geometry.convex_hull_2d(pos)
         int_dict = cls.get_all_intersect_pos(pos.copy())
         from_idx = convex_hull_2d[0]
         from_point = pos[from_idx]
         origin_point = from_point
-        end1_idx = end2_idx = 0
 
         # 查找 假设 查找到的都是端点线段
         end1_idx, end2_idx = pos_neibor[from_point]
@@ -292,10 +304,20 @@ class PublicMath(PublicEvent):
 class PublicDraw:
 
     @staticmethod
-    def draw_text(x, y, text="Hello Word", font_id=0, size=10, *, color=(0.5, 0.5, 0.5, 1), dpi=72, column=0):
+    def draw_text(
+        x,
+        y,
+        text="Hello Word",
+        font_id=0,
+        size=10,
+        *,
+        color=(0.5, 0.5, 0.5, 1),
+        column=0,
+    ):
         blf.position(font_id, x, y - (size * (column + 1)), 0)
         blf.size(font_id, size)
         blf.color(font_id, *color)
+        blf.draw(font_id, text)
 
     @staticmethod
     def draw_line(vertices, color, line_width=1):
@@ -478,8 +500,27 @@ class PublicClass(
             bpy.ops.wm.redraw_timer(type="DRAW", iterations=1)
 
     @classmethod
+    def dot(cls, val):
+        """修正因不同分辨率, 造成dpi的不同, 而导致Raidus不一致的问题."""
+        return bpy.context.preferences.system.dpi / 25.4 * bpy.context.preferences.system.pixel_size * val
+
+    @classmethod
+    def dpi(cls, val):
+        """修正因不同分辨率, 造成dpi的不同, 而导致灵敏度的不一致的问题."""
+        return val * (bpy.context.preferences.system.pixel_size * bpy.context.preferences.system.dpi / 72)
+
+    @classmethod
     def gpu_depth_ray_cast(cls, x, y, data):
-        size = cls.pref_().depth_ray_size
+        # size = cls.pref_().depth_ray_size
+
+        ts = bpy.context.tool_settings
+        if ts.unified_paint_settings.use_unified_size:
+            size = ts.unified_paint_settings.size
+        else:
+            size = bpy.context.tool_settings.sculpt.brush.size
+        # size = cls.dot(size)
+        # size = cls.dpi(size)
+        size = 5
 
         _buffer = cls.get_gpu_buffer((x, y), wh=(size, size), centered=True)
         numpy_buffer = np.asarray(_buffer, dtype=np.float32).ravel()
@@ -501,17 +542,51 @@ class PublicClass(
         log.debug("get_mouse_location_ray_cast\t" + str(data["is_in_model"]))
         return data["is_in_model"]
 
+    def ray_cast_ob(self, context=bpy.context, coord=(0, 0)):
+        """若ob在编辑模式下(含雕刻模式)无效."""
+        region = context.region
+        rv3d = context.region_data
+        ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
+        ray_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
+        ob = context.sculpt_object
+        ob = ob.evaluated_get(context.evaluated_depsgraph_get())
+        r = ob.ray_cast(ray_origin, ray_vector)
+        return r
+
+    def ray_cast(self, context=bpy.context, coord=(0, 0)):
+        """可能要遍历场景内所有对象, 开销很大. avg: 0.0012左右.
+        * 具有多细分级别修改器的对象无法被识别, 淦!
+        :return: success, location, normal, face_index, hit_ob, matrix"""
+        region = context.region
+        rv3d = context.region_data
+        ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
+        ray_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
+        depsgraph: bpy.types.Depsgraph = context.evaluated_depsgraph_get()
+        return depsgraph.scene_eval.ray_cast(depsgraph, ray_origin, ray_vector)[0]
+        # return depsgraph.scene_eval.ray_cast(depsgraph, ray_origin, ray_vector)
+
     @property
     def active_tool(self):
         return ToolSelectPanelHelper.tool_active_from_context(bpy.context)
 
     @property
     def active_tool_name(self):
+        """每次获取均执行`ToolSelectPanelHelper.tool_active_from_context(bpy.context)`动态获取工具名"""
         return self.active_tool.idname if self.active_tool else ""
 
     @property
     def is_builtin_brush_smooth_brush(self):
         return self.active_tool_name == "builtin_brush.Smooth"
+
+    @property
+    def active_brush(self) -> bpy.types.Brush:
+        """`return bpy.context.tool_settings.sculpt.brush`"""
+        return bpy.context.tool_settings.sculpt.brush
+
+    @classmethod
+    def set_active_brush(cls, brush: bpy.types.Brush):
+        """`bpy.context.tool_settings.sculpt.brush = brush`"""
+        bpy.context.tool_settings.sculpt.brush = brush
 
 
 @cache
@@ -541,7 +616,7 @@ def register_submodule_factory(submodule_tuple):
 
 
 class PublicOperator(PublicClass, Operator):
-    is_click: BoolProperty(name="按键操作是单击", default=True, options={"SKIP_SAVE"})
+    is_click: BoolProperty(name=_("theKeyActionIsAClick"), default=True, options={"SKIP_SAVE"})
 
     bbrush_brush = {
         "bbrush.ellipse_mask": "ELLIPSE",
@@ -549,7 +624,22 @@ class PublicOperator(PublicClass, Operator):
         "bbrush.polygon_mask": "POLYGON",
         "bbrush.square_mask": "SQUARE",
     }
-    annotate_brush = ("builtin.annotate", "builtin.annotate_line", "builtin.annotate_polygon", "builtin.annotate_eraser")
+    annotate_brush = (
+        "builtin.annotate",
+        "builtin.annotate_line",
+        "builtin.annotate_polygon",
+        "builtin.annotate_eraser",
+    )
+
+    @property
+    def mouse_is_in_model_up(self):
+        # 优化, `ray_cast`比`深度检测`开销要低, 但对在雕刻模式下, 含有多级别细分的对象无效.
+        if [i for i in bpy.context.sculpt_object.modifiers if i.type == "MULTIRES"]:
+            r = self.get_mouse_location_ray_cast(self.context, self.event)
+        else:
+            r = self.ray_cast(self.context, self.event)
+        return r
+        return self.get_mouse_location_ray_cast(self.context, self.event)
 
     @classmethod
     def poll(cls, context):
@@ -572,7 +662,16 @@ class PublicOperator(PublicClass, Operator):
 
         ctrl_shift = ctrl and (not alt) and shift
         ctrl_shift_alt = ctrl and alt and shift
-        return not_key, only_ctrl, only_alt, only_shift, shift_alt, ctrl_alt, ctrl_shift, ctrl_shift_alt
+        return (
+            not_key,
+            only_ctrl,
+            only_alt,
+            only_shift,
+            shift_alt,
+            ctrl_alt,
+            ctrl_shift,
+            ctrl_shift_alt,
+        )
 
     @property
     def is_3d_view(self):
@@ -580,7 +679,16 @@ class PublicOperator(PublicClass, Operator):
         return context.space_data and (context.space_data.type == "VIEW_3D")
 
     def set_event_key(self):
-        (self.not_key, self.only_ctrl, self.only_alt, self.only_shift, self.shift_alt, self.ctrl_alt, self.ctrl_shift, self.ctrl_shift_alt) = self.get_event_key(self.event)
+        (
+            self.not_key,
+            self.only_ctrl,
+            self.only_alt,
+            self.only_shift,
+            self.shift_alt,
+            self.ctrl_alt,
+            self.ctrl_shift,
+            self.ctrl_shift_alt,
+        ) = self.get_event_key(self.event)
 
     def _set_ce(self, context, event):
         self.context = context
@@ -592,10 +700,12 @@ class PublicOperator(PublicClass, Operator):
         setattr(self, "_mouse_y", min(max(0, event.mouse_region_y), context.region.height))
 
     def init_invoke(self, context, event) -> None:
+        """设置self.context, 事件, 鼠标co"""
         self._set_ce(context, event)
         self._set_mouse(context, event)
 
     def init_modal(self, context, event) -> None:
+        """self.init_invoke(context, event), 妈的, 脱裤子放屁, 直接用init_invoke不就好"""
         self.init_invoke(context, event)
 
     @property
@@ -649,6 +759,6 @@ class PublicExportPropertyOperator:
             _file.write(json.dumps(data, separators=(",", ": "), indent=1, ensure_ascii=True))
             _file.close()
         except Exception as e:
-            print(f"ERROR {self.filepath} 写入属性文件错误")
+            print(f"ERROR {self.filepath} writePropertyFileError")
             print(e)
         return {"FINISHED"}

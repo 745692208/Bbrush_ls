@@ -9,25 +9,34 @@ from ..utils.public import PublicOperator
 
 class SwitchProperty(PublicOperator):
     is_esc = False
+    _tmp_brush: bpy.types.Brush = None
+    """临时储存的笔刷对象"""
+    _tmp_tool_name: str = ""
+    """临时储存的笔刷工具名称"""
 
     @property
     def is_smoot_mode(self):
+        """`return self.only_shift or self.shift_alt`"""
         return self.only_shift or self.shift_alt
 
     @property
     def is_mask_mode(self):
+        """return self.only_ctrl or self.ctrl_alt"""
         return self.only_ctrl or self.ctrl_alt
 
     @property
     def is_hide_mode(self):
+        """self.ctrl_shift or self.ctrl_shift_alt"""
         return self.ctrl_shift or self.ctrl_shift_alt
 
     @property
     def is_exit(self):
+        """用户输入'ESC', 'SPACE'"""
         return (self.event.type in ("ESC", "SPACE")) or self.not_key or self.is_esc
 
     @property
     def is_pass(self):
+        """可能是输入了空格？"""
         space = self.event_is_space
         return (self.only_ctrl and self.event_is_tab) or (space and self.ctrl_alt) or (space and self.only_alt) or (space and self.only_ctrl)
 
@@ -65,6 +74,7 @@ class SwitchProperty(PublicOperator):
 
     @property
     def active_mask_brush(self):
+        """`BrushTool.active_brush["MASK"]`"""
         return BrushTool.active_brush["MASK"]
 
     @staticmethod
@@ -77,6 +87,7 @@ class SwitchProperty(PublicOperator):
 
     @staticmethod
     def set_sculpt_brush(value):
+        """BrushTool.active_brush['SCULPT'] = value"""
         BrushTool.active_brush["SCULPT"] = value
 
     @property
@@ -87,15 +98,11 @@ class SwitchProperty(PublicOperator):
     def is_change_brush(self):
         return self.active_not_in_active_brushes
 
-    @property
-    def mouse_is_in_model_up(self):
-        return self.get_mouse_location_ray_cast(self.context, self.event)
-
 
 class BBrushSwitch(SwitchProperty):
     bl_idname = "bbrush.bbrush_switch"
-    bl_label = "笔刷模式切换"
-    bl_description = "切换笔刷内容,每个键的列表，有[雕刻,遮罩,隐藏]三个功能"
+    bl_label = "Brush mode switch"
+    bl_description = "Switch brush content, with a list of options for each key, including [sculpt, mask, hide]"
 
     bl_options = {"REGISTER"}
 
@@ -106,6 +113,8 @@ class BBrushSwitch(SwitchProperty):
         if self.is_3d_view:
             if self.is_change_brush:
                 self.set_sculpt_brush(self.active_tool_name)
+            self._tmp_brush = self.active_brush
+            self._tmp_tool_name = self.active_tool_name
             context.window_manager.modal_handler_add(self)
             return {"RUNNING_MODAL"}
         else:
@@ -122,9 +131,9 @@ class BBrushSwitch(SwitchProperty):
         elif self.is_pass:  # ctrl tab切换模式
             self.is_esc = True
             return {"PASS_THROUGH"}
-        elif self.is_hide_mode:
+        elif self.is_hide_mode:  # self.ctrl_shift or self.ctrl_shift_alt
             self.hide_mode()
-        elif self.is_mask_mode:
+        elif self.is_mask_mode:  # self.only_ctrl or self.ctrl_alt
             self.mask_mode()
         else:
             self.set_shortcut_keys("NORMAL")
@@ -133,13 +142,60 @@ class BBrushSwitch(SwitchProperty):
 
     def event_ops(self, event):
         press = self.event_is_press
-        if self.only_shift:
-            setattr(self, "_tmp_brush", self.active_tool_name)
-            bpy.ops.wm.tool_set_by_id(name="builtin_brush.Smooth")
-        elif getattr(self, "_tmp_brush", False):
-            bpy.ops.wm.tool_set_by_id(name=self._tmp_brush)
-            delattr(self, "_tmp_brush")
+        # print(f"    {press}, {self.only_shift}")
 
+        if self.only_shift and self.active_brush.name != "Smooth":  # 切换到Smooth Brush
+            self.set_active_brush(bpy.data.brushes.get("Smooth"))
+        """
+        if self.only_shift:  # 切换到Smooth Brush
+            # if self.active_brush.name != "Smooth":
+            if not self._tmp_tool_name and not self._tmp_brush:
+                self._tmp_brush = self.active_brush
+                self._tmp_tool_name = self.active_tool_name
+            self.analysis_switch_brush("builtin_brush.Smooth")
+        elif self._tmp_tool_name and self._tmp_brush:
+            bpy.ops.wm.tool_set_by_id(name=self._tmp_tool_name)
+            self.set_active_brush(self._tmp_brush)
+            self._tmp_tool_name = ""
+            self._tmp_brush = None
+        """
+
+        """
+        tmp = getattr(self, "_tmp_tool_name", False)
+        tmp_brush = getattr(self, "_tmp_brush", None)
+        print(tmp, tmp_brush)
+
+        # if self.only_shift and event.type == "LEFTMOUSE" and event.value == "PRESS":
+        # if self.only_shift and event.value == "PRESS":
+        if self.only_shift:
+            setattr(self, "_tmp_tool_name", self.active_tool_name)
+            setattr(self, "_tmp_brush", self.active_brush)
+
+            print(f"当前活动工具名：{self.active_tool_name}, {self.active_brush} !!!!!!!!!!!!!!!!!!!!")
+            self.analysis_switch_brush("builtin_brush.Smooth")
+            if 0:
+                if bpy.app.version >= (4, 3, 0):
+                    if self.active_brush.name != "Smooth":
+                        self.analysis_switch_brush("builtin_brush.Smooth")
+                else:  # 旧版
+                    if self.active_tool_name != "builtin_brush.Smooth":
+                        self.analysis_switch_brush("builtin_brush.Smooth")
+            self.tag_redraw(bpy.context)
+
+        elif tmp:
+            # 有temp对象就改回去然后删除temp对象。
+            bpy.ops.wm.tool_set_by_id(name=self._tmp_tool_name)
+            delattr(self, "_tmp_tool_name")
+            # self.tag_redraw(bpy.context)
+
+            if tmp_brush:
+                self.set_active_brush = self._tmp_brush
+                delattr(self, "_tmp_brush")
+                # self.tag_redraw(bpy.context)
+
+            self.tag_redraw(bpy.context)
+
+        """
         if press:
             if event.type == "NUMPAD_PLUS":
                 bpy.ops.sculpt.mask_filter("EXEC_DEFAULT", True, filter_type="GROW", auto_iteration_count=True)
@@ -150,7 +206,8 @@ class BBrushSwitch(SwitchProperty):
             elif event.type in ("DOWN_ARROW", "NUMPAD_SLASH"):
                 bpy.ops.sculpt.mask_filter("EXEC_DEFAULT", True, filter_type="CONTRAST_DECREASE", auto_iteration_count=False)
 
-        if self.is_smoot_mode:
+        # print(f'event_ops -> {self.only_shift and event.type == "LEFTMOUSE" and event.value == "PRESS"}, {tmp}, {press}')
+        if self.is_smoot_mode:  # self.only_shift or self.shift_alt
             return self.smoot_mode()
         elif self.event_is_w and self.only_ctrl and press:
             bpy.ops.sculpt.face_sets_create("EXEC_DEFAULT", True, mode="MASKED")
@@ -161,17 +218,30 @@ class BBrushSwitch(SwitchProperty):
     def exit(self, context, event):
         BrushTool.toolbar_switch("SCULPT")
         if self.is_sculpt_mode:
-            current_brush_name = bpy.context.tool_settings.sculpt.brush.name.lower()
-            name = BrushTool.active_brush["SCULPT"]
-            # 防止类似box_mask这类不知道怎么获取的笔刷
-            if current_brush_name == name.split(".", 1)[1].lower():
-                bpy.ops.wm.tool_set_by_id(name=name)
-            else:
-                keys = ["mask", "hide", "project", "trim", "smooth"]
-                for i in keys:
-                    if i in current_brush_name:
-                        bpy.ops.wm.tool_set_by_id(name=name)
-                        break
+            if 0:
+                bpy.ops.wm.tool_set_by_id(name=BrushTool.active_brush["SCULPT"])
+            else:  # My 我有一个笔刷的快捷键需要按住alt，切换成功后松开按键会跳回原本的笔刷, https://gitee.com/AIGODLIKE/Bbrush/issues/I8QFWM
+                if self._tmp_tool_name and self._tmp_brush:
+                    bpy.ops.wm.tool_set_by_id(name=self._tmp_tool_name)
+                    self.set_active_brush(self._tmp_brush)
+                    self._tmp_tool_name = ""
+                    self._tmp_brush = None
+                else:
+                    bpy.ops.wm.tool_set_by_id(name=BrushTool.active_brush["SCULPT"])
+
+                """
+                current_brush_name = bpy.context.tool_settings.sculpt.brush.name.lower()
+                name = BrushTool.active_brush["SCULPT"]
+                # 防止类似box_mask这类不知道怎么获取的笔刷
+                if current_brush_name == name.split(".", 1)[1].lower():
+                    bpy.ops.wm.tool_set_by_id(name=name)
+                else:
+                    keys = ["mask", "hide", "project", "trim", "smooth"]
+                    for i in keys:
+                        if i in current_brush_name:
+                            bpy.ops.wm.tool_set_by_id(name=name)
+                            break
+                """
 
         if not self.active_tool:
             BrushTool.init_active_brush()
