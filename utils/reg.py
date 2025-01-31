@@ -21,6 +21,6 @@ def register():
 
 
 def unregister():
-    BrushTool.toolbar_switch('ORIGINAL_TOOLBAR')
+    BrushTool.toolbar_switch("ORIGINAL_TOOLBAR")
     unregister_module()
     PublicClass.cache_clear()

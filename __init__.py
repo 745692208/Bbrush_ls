@@ -8,7 +8,7 @@ bl_info = {
     "location": "进入雕刻模式将会在顶栏显示",
     "description": "",
     "warning": "",
-    "category": "辣椒出品"
+    "category": "辣椒出品",
 }
 
 

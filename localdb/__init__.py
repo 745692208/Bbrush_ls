@@ -5,7 +5,7 @@ import json
 
 
 class TranslationHelper:
-    def __init__(self, name: str, data: dict, lang='zh_CN'):
+    def __init__(self, name: str, data: dict, lang="zh_CN"):
         self.name = name
         self.translations_dict = dict()
 
@@ -29,11 +29,11 @@ dir_name = os.path.dirname(__file__)
 help_classes = []
 
 for file in os.listdir(dir_name):
-    if not file.endswith('.json'):
+    if not file.endswith(".json"):
         continue
-    with open(os.path.join(dir_name, file), 'r', encoding='utf-8') as f:
+    with open(os.path.join(dir_name, file), "r", encoding="utf-8") as f:
         d = json.load(f)
-        help_cls = TranslationHelper('bbrush_' + file, d)
+        help_cls = TranslationHelper("bbrush_" + file, d)
         help_classes.append(help_cls)
 
 
