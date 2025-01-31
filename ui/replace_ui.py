@@ -52,26 +52,32 @@ def append_top_editor_menus(self, context):
             sub_row.prop(pref, "always_use_sculpt_mode", emboss=True, icon="AUTO", text="")
 
             row = layout.row(align=True)
-            row.prop(
-                pref,
-                "depth_display_mode",
-                emboss=True,
-            )
-            row.prop(
-                pref,
-                "depth_scale",
-                emboss=True,
-            )
+            row.prop(pref, "depth_display_mode", emboss=True)
+            row.prop(pref, "depth_scale", emboss=True)
             row.prop(pref, "show_shortcut_keys", emboss=True, icon="EVENT_K", text="")
             if pref.replace_top_bar:
                 draw_restart_button(row)
 
         if fs and pref.sculpt and pref.replace_top_bar:
-            layout.operator(
-                "screen.back_to_previous",
-                icon="SCREEN_BACK",
-                text="Back to Previous",
-            )
+            layout.operator("screen.back_to_previous", icon="SCREEN_BACK", text="Back to Previous")
+
+
+def append_top_editor_menus2(self, context):
+    """View3D -> 顶部 -> 菜单栏 -> 可见性选项."""
+    pref = PublicClass.pref_()
+
+    sculpt = pref.sculpt or pref.is_sculpt_mode
+    if sculpt:
+        layout = self.layout
+        layout.separator()
+        sub_row = layout.row(align=1)
+        text = "Bbrush" if pref.show_text else ""
+        if not pref.always_use_sculpt_mode:
+            sub_row.prop(pref, "sculpt", text=text, icon="SCULPTMODE_HLT")
+        else:
+            sub_row.prop(pref, "always_use_sculpt_mode", emboss=True, icon="AUTO", text="")
+        if pref.sculpt:
+            sub_row.popover(panel="VIEW3D_PT_editor_menus_bbrush_options", text="", icon="PREFERENCES")
 
 
 def replace_top_bar(replace: bool):
@@ -88,6 +94,8 @@ def replace_top_bar(replace: bool):
 
 
 def update_top_bar():
+    """不要了"""
+    return
     pref = PublicClass.pref_()
 
     if pref.replace_top_bar:
@@ -98,13 +106,19 @@ def update_top_bar():
 
 
 def register():
+    """
     bpy.types.TOPBAR_MT_editor_menus.prepend(append_top_editor_menus)
     bpy.types.TOPBAR_HT_upper_bar.append(append_top_editor_menus)
+    """
+    bpy.types.VIEW3D_MT_editor_menus.append(append_top_editor_menus2)
 
 
 def unregister():
+    """
     if hasattr(bpy.types, "TOPBAR_MT_editor_menus"):
         bpy.types.TOPBAR_MT_editor_menus.remove(append_top_editor_menus)
     if hasattr(bpy.types, "TOPBAR_HT_upper_bar"):
         bpy.types.TOPBAR_HT_upper_bar.remove(append_top_editor_menus)
     replace_top_bar(False)
+    """
+    bpy.types.VIEW3D_MT_editor_menus.remove(append_top_editor_menus2)

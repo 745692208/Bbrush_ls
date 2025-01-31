@@ -4,6 +4,7 @@ from mathutils import Vector
 from .sculpt_operator import normal_brush_handle
 from ..utils.log import log
 from ..utils.public import PublicOperator, PublicDraw
+import time
 
 
 class OperatorProperty(PublicOperator, PublicDraw):
@@ -107,6 +108,7 @@ class BBrushSculpt(DepthUpdate):
         self.mouse_move_count = None
 
     def invoke(self, context, event):
+        # self.start_time = time.time()
 
         log.debug(self.bl_idname)
         self.cache_clear()
@@ -119,6 +121,8 @@ class BBrushSculpt(DepthUpdate):
 
         if self.is_3d_view:
             self.in_modal = self.mouse_is_in_model_up
+            # print(f"1 {time.time() - self.start_time}")
+            # self.start_time = time.time()
             context.window_manager.modal_handler_add(self)
             return {"RUNNING_MODAL"}
         else:
@@ -155,8 +159,13 @@ class BBrushSculpt(DepthUpdate):
             if self.only_alt:
                 bpy.ops.view3d.move("INVOKE_DEFAULT", True)
             else:
+                bpy.ops.view3d.rotate("INVOKE_DEFAULT", True)
+                """
+                # 关闭下面这个好像会流畅些, 但不知道会造成什么影响
                 if event.value_prev != "RELEASE":
+                    # print(f"2 {time.time() - self.start_time}")
                     bpy.ops.view3d.rotate("INVOKE_DEFAULT", True)
+                """
         return {"FINISHED"}
 
     def smooth_brush_handle(self):

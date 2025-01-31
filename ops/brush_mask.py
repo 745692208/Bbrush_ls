@@ -158,11 +158,7 @@ class MaskClick(MaskProperty):
         if in_model:  # 平滑遮罩
             sculpt.mask_filter("EXEC_DEFAULT", True, filter_type="SMOOTH", auto_iteration_count=True)
         else:  # 切换遮罩
-            paint.mask_flood_fill(
-                "EXEC_DEFAULT",
-                True,
-                mode="INVERT",
-            )
+            paint.mask_flood_fill("EXEC_DEFAULT", True, mode="INVERT")
 
     @staticmethod
     def mask_click_ctrl_alt(in_model, sculpt):
@@ -311,34 +307,13 @@ class MaskClickDrag(MaskDrawArea):
 
     def exit_in_modal(self, paint, args):
         if self.only_ctrl:
-            paint.mask_box_gesture(
-                "EXEC_DEFAULT",
-                True,
-                **args,
-                value=1,
-                use_front_faces_only=self.is_use_front_faces_only,
-            )
+            paint.mask_box_gesture("EXEC_DEFAULT", True, **args, value=1, use_front_faces_only=self.is_use_front_faces_only)
         elif self.ctrl_alt:
-            paint.mask_box_gesture(
-                "EXEC_DEFAULT",
-                True,
-                **args,
-                value=0,
-                use_front_faces_only=self.is_use_front_faces_only,
-            )
+            paint.mask_box_gesture("EXEC_DEFAULT", True, **args, value=0, use_front_faces_only=self.is_use_front_faces_only)
         elif self.ctrl_shift_alt:
-            paint.hide_show(
-                action="HIDE",
-                **args,
-            )
+            paint.hide_show(action="HIDE", **args)
         elif self.ctrl_shift:
-            paint.hide_show(
-                "EXEC_DEFAULT",
-                True,
-                action="HIDE",
-                area="OUTSIDE",
-                **args,
-            )
+            paint.hide_show("EXEC_DEFAULT", True, action="HIDE", area="OUTSIDE", **args)
 
     def exit_exception(self):
         paint = bpy.ops.paint

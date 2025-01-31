@@ -1,3 +1,4 @@
+from functools import cache
 import bpy
 from bpy.app.translations import pgettext as _
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty
@@ -49,7 +50,7 @@ class BBrushAddonPreferences(AddonPreferences, PublicClass):
 
     always_use_sculpt_mode: BoolProperty(name=_("Always use Bbrush sculpting mode"), description=_("If entering sculpting mode, Bbrush mode will automatically activate; if exiting sculpting mode, Bbrush mode will deactivate"), default=False)
 
-    depth_ray_size: IntProperty(name=_("Depth ray check size(px)"), description=_("Check if the mouse is placed over the model, mouse cursor's range size"), default=100, min=10, max=300)
+    depth_ray_size: IntProperty(name=_("Depth ray check size(px)"), description=_("Check if the mouse is placed over the model, mouse cursor's range size"), default=5, min=5, max=300)
 
     show_shortcut_keys: BoolProperty(name=_("Display shortcut keys"), default=True)
     shortcut_offset_x: IntProperty(name=_("Shortcut key offset X"), default=20, max=114514, min=0)
@@ -72,42 +73,67 @@ class BBrushAddonPreferences(AddonPreferences, PublicClass):
     )
 
     def draw(self, context):
-        layout = self.layout
+        draw_(self.layout, context)
 
-        box = layout.box()
-        box.prop(self, "always_use_sculpt_mode")
-        row = box.row(align=True)
-        row.prop(self, "depth_display_mode")
-        row.prop(self, "depth_ray_size")
-        layout.separator()
-        layout.label(text="顶部栏")
-        row = layout.box().row(align=True)
-        row.prop(self, "show_text")
-        row.prop(self, "replace_top_bar")
-        row.prop(self, "alignment")
 
-        layout.separator()
-        layout.label(text="Silhouette")
-        box = layout.box()
-        box.prop(self, "depth_scale")
-        row = box.row(align=True)
-        row.prop(self, "depth_offset_x")
-        row.prop(self, "depth_offset_y")
+@cache
+def get_pref():
+    return bpy.context.preferences.addons[ADDON_NAME].preferences
 
-        layout.separator()
-        layout.label(text="Shortcut")
-        box = layout.box()
-        box.prop(self, "show_shortcut_keys")
-        box.prop(self, "shortcut_show_size")
-        row = box.row(align=True)
-        row.prop(self, "shortcut_offset_x")
-        row.prop(self, "shortcut_offset_y")
+
+class VIEW3D_PT_editor_menus_bbrush_options(bpy.types.Panel):
+    bl_idname = "VIEW3D_PT_editor_menus_bbrush_options"
+    bl_label = "BBrush Options"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "WINDOW"
+    bl_ui_units_x = 20
+
+    def draw(self, context):
+        draw_(self.layout, context)
+
+
+def draw_(layout: bpy.types.UILayout, context=bpy.context):
+    """UI"""
+    pref = get_pref()
+    layout = layout
+
+    box = layout.box()
+    box.prop(pref, "always_use_sculpt_mode")
+    row = box.row(align=True)
+    row.prop(pref, "depth_display_mode")
+    row.prop(pref, "depth_ray_size")
+    layout.separator()
+
+    layout.label(text="顶部栏")
+    row = layout.box().row(align=True)
+    row.prop(pref, "show_text")
+    # row.prop(pref, "replace_top_bar")
+    # row.prop(pref, "alignment")
+    layout.separator()
+
+    layout.label(text="Silhouette")
+    box = layout.box()
+    box.prop(pref, "depth_scale")
+    row = box.row(align=True)
+    row.prop(pref, "depth_offset_x")
+    row.prop(pref, "depth_offset_y")
+    layout.separator()
+
+    layout.label(text="Shortcut")
+    box = layout.box()
+    box.prop(pref, "show_shortcut_keys")
+    box.prop(pref, "shortcut_show_size")
+    row = box.row(align=True)
+    row.prop(pref, "shortcut_offset_x")
+    row.prop(pref, "shortcut_offset_y")
 
 
 def register():
     bpy.utils.register_class(BBrushAddonPreferences)
+    bpy.utils.register_class(VIEW3D_PT_editor_menus_bbrush_options)
 
 
 def unregister():
     bpy.utils.unregister_class(BBrushAddonPreferences)
+    bpy.utils.unregister_class(VIEW3D_PT_editor_menus_bbrush_options)
     key.unregister()

@@ -419,6 +419,7 @@ class PublicClass(
     def cache_clear():
         get_pref.cache_clear()
         PublicClass.get_mouse_location_ray_cast.cache_clear()
+        PublicClass.ray_cast.cache_clear()
 
     @staticmethod
     def pref_():
@@ -511,16 +512,17 @@ class PublicClass(
 
     @classmethod
     def gpu_depth_ray_cast(cls, x, y, data):
-        # size = cls.pref_().depth_ray_size
+        size = cls.pref_().depth_ray_size
 
+        """
         ts = bpy.context.tool_settings
         if ts.unified_paint_settings.use_unified_size:
             size = ts.unified_paint_settings.size
         else:
             size = bpy.context.tool_settings.sculpt.brush.size
-        # size = cls.dot(size)
+        size = cls.dot(size)
         # size = cls.dpi(size)
-        size = 5
+        """
 
         _buffer = cls.get_gpu_buffer((x, y), wh=(size, size), centered=True)
         numpy_buffer = np.asarray(_buffer, dtype=np.float32).ravel()
@@ -542,8 +544,9 @@ class PublicClass(
         log.debug("get_mouse_location_ray_cast\t" + str(data["is_in_model"]))
         return data["is_in_model"]
 
-    def ray_cast_ob(self, context=bpy.context, coord=(0, 0)):
+    def ray_cast_ob(self, context=bpy.context, event=None):
         """若ob在编辑模式下(含雕刻模式)无效."""
+        coord = (event.mouse_region_x, event.mouse_region_y)
         region = context.region
         rv3d = context.region_data
         ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
@@ -553,10 +556,12 @@ class PublicClass(
         r = ob.ray_cast(ray_origin, ray_vector)
         return r
 
-    def ray_cast(self, context=bpy.context, coord=(0, 0)):
+    @cache
+    def ray_cast(self, context=bpy.context, event=None):
         """可能要遍历场景内所有对象, 开销很大. avg: 0.0012左右.
         * 具有多细分级别修改器的对象无法被识别, 淦!
         :return: success, location, normal, face_index, hit_ob, matrix"""
+        coord = (event.mouse_region_x, event.mouse_region_y)
         region = context.region
         rv3d = context.region_data
         ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
