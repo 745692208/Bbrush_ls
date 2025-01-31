@@ -9,15 +9,15 @@ class DrawShortcutKeys(PublicClass):
     handle: object
 
     font_info = {
-        'font_id': 0,
-        'handler': None,
+        "font_id": 0,
+        "handler": None,
     }
 
     def draw(self):
         from bpy.app.translations import pgettext as _
 
         if self.pref.sculpt and self.pref.show_shortcut_keys:
-            font_id = self.font_info['font_id']
+            font_id = self.font_info["font_id"]
             font_size = self.pref.shortcut_show_size
             column_space_size = 10
             key_row_space = 150
@@ -29,12 +29,12 @@ class DrawShortcutKeys(PublicClass):
             for index, item in enumerate(reversed(self.draw_shortcut_keys)):
                 y += 18 * font_size + column_space_size
 
-                if 'doc' in item:
+                if "doc" in item:
                     blf.position(font_id, x - 10, y, 0)
-                    blf.draw(font_id, _(item['doc']))
+                    blf.draw(font_id, _(item["doc"]))
                 else:
-                    tool = _(item['tool'])
-                    key = _(item['key'])
+                    tool = _(item["tool"])
+                    key = _(item["key"])
                     # draw tool
                     blf.position(font_id, x, y, 0)
                     blf.draw(font_id, tool)
@@ -44,19 +44,13 @@ class DrawShortcutKeys(PublicClass):
 
     @classmethod
     def register(cls):
-        cls.handle = bpy.types.SpaceView3D.draw_handler_add(
-            DrawShortcutKeys().draw,
-            (),
-            'WINDOW',
-            'POST_PIXEL'
-        )
+        cls.handle = bpy.types.SpaceView3D.draw_handler_add(DrawShortcutKeys().draw, (), "WINDOW", "POST_PIXEL")
 
     @classmethod
     def unregister(cls):
         handle = cls.handle
         if handle:
-            bpy.types.SpaceView3D.draw_handler_remove(
-                handle, 'WINDOW')
+            bpy.types.SpaceView3D.draw_handler_remove(handle, "WINDOW")
 
 
 def register():

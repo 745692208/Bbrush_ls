@@ -1,0 +1,19 @@
+{
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter", // 代码格式化工具(Black, autopep8, yapf, ...), 需要在扩展中安装
+        "editor.formatOnSave": false,
+    },
+    // "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "off", // off, basic, strict
+    "black-formatter.args": [
+        "--line-length=256" // 设置单行最长字符限制
+    ],
+    "flake8.args": [
+        "--ignore=E501,E203,F821,F722" // error-codes: https://www.osgeo.cn/flake8/user/error-codes.html, https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
+    ],
+    "python.analysis.autoImportCompletions": true, // 自动为代码提供导入建议和补全
+    "python.analysis.autoFormatStrings": true, // 用于控制字符串格式化的行为。此功能可以帮助开发者在编写 f-string、.format() 方法或百分号 (%) 格式化字符串时自动完成和修正格式化操作
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportInvalidTypeForm": "none"
+    },
+}

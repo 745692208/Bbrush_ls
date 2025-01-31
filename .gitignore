@@ -1,7 +1,18 @@
+# .*
+*.pyc
+*.spec
+*.ini
 
-*.blend1
-__pycache__/
-*.py[cod]
-*$py.class
-.idea
-.Bbrush
+.git
+.icon
+
+__pycache__
+
+dist
+build
+
+ck
+test
+
+blendcache_LS_Nodes_Lib
+textures
