@@ -64,15 +64,6 @@ bbrush_mask = "bbrush.mask"
 bbrush_sculpt = "bbrush.bbrush_sculpt"
 bbrush_switch = "bbrush.bbrush_switch"
 
-bbrush_key_items = (
-    (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK", "any": False}, {"properties": [("is_click", True)]}),
-    (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": False}, {"properties": [("is_click", False)]}),
-    (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK", "alt": False}, {"properties": [("is_click", True)]}),
-    (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "alt": False}, {"properties": [("is_click", False)]}),
-    (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": False, "alt": True}, {"properties": [("is_click", False)]}),
-    (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK", "any": True, "ctrl": True}, {"properties": [("is_click", True)]}),
-    (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": True, "ctrl": True}, {"properties": [("is_click", False)]}),
-)
 
 sculpt_keys_items = (
     (
@@ -118,16 +109,43 @@ sculpt_keys_items = (
         empty_window,
         {
             "items": [
-                *bbrush_key_items,
-                (bbrush_switch, {"type": "LEFT_CTRL", "value": "ANY"}, None),
-                # (bbrush_switch, {"type": "LEFT_ALT", "value": "ANY"}, None),  # 避免`alt+数字键`切换笔刷快捷键冲突. 也没发现有其它作用, 直接屏蔽.
-                (bbrush_switch, {"type": "LEFT_SHIFT", "value": "ANY"}, None),
-                ("object.transfer_mode", {"type": "LEFTMOUSE", "value": "CLICK", "alt": True}, None),
-                ("view3d.rotate", {"type": "RIGHTMOUSE", "value": "CLICK_DRAG"}, None),
+                # ("雕刻", "LEFTMOUSE", "sculpt.brush_stroke", (("mode", "NORMAL"), ("ignore_background_click", True))),
+                ("sculpt.brush_stroke", {"type": "LEFTMOUSE", "value": "PRESS"}, {"properties": [("mode", "NORMAL"), ("ignore_background_click", True)]}),
+                # ("反转雕刻", "alt+LEFTMOUSE", "sculpt.brush_stroke", (("mode", "INVERT"), ("ignore_background_click", True))),
+                ("sculpt.brush_stroke", {"type": "LEFTMOUSE", "value": "PRESS", "alt": True}, {"properties": [("mode", "INVERT"), ("ignore_background_click", True)]}),
+                # ("雕刻 平滑", "shift+LEFTMOUSE", "sculpt.brush_stroke", (("mode", "SMOOTH"), ("ignore_background_click", True))),
+                # ("sculpt.brush_stroke", {"type": "LEFTMOUSE", "value": "PRESS", "shift": True}, {"properties": [("mode", "SMOOTH"), ("ignore_background_click", True)]}),
+                # ("视图 操控 旋转", "LEFTMOUSE", "view3d.rotate", None),
+                ("view3d.rotate", {"type": "LEFTMOUSE", "value": "PRESS"}, None),
+                ("view3d.rotate", {"type": "RIGHTMOUSE", "value": "PRESS"}, None),
+                # ("视图 操控 平移", "alt+LEFTMOUSE", "view3d.move", None),
+                ("view3d.move", {"type": "LEFTMOUSE", "value": "PRESS", "alt": True}, None),
                 ("view3d.move", {"type": "RIGHTMOUSE", "value": "PRESS", "alt": True}, None),
-                ("view3d.move", {"type": "MIDDLEMOUSE", "value": "PRESS", "alt": True}, None),
-                ("view3d.zoom", {"type": "RIGHTMOUSE", "value": "PRESS", "ctrl": True}, None),
-                ("view3d.zoom", {"type": "RIGHTMOUSE", "value": "PRESS", "alt": True}, None),
+                # 传递雕刻对象
+                # ("object.transfer_mode", {"type": "LEFTMOUSE", "value": "CLICK", "alt": True}, None),  # 冲突用不了, 用alt+q好了
+                # Mask 和 Switch
+                (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK", "any": True, "ctrl": True}, {"properties": [("is_click", True)]}),
+                (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": True, "ctrl": True}, {"properties": [("is_click", False)]}),
+                (bbrush_switch, {"type": "LEFT_CTRL", "value": "ANY"}, None),
+                # # (bbrush_switch, {"type": "LEFT_ALT", "value": "ANY"}, None),  # 避免`alt+数字键`切换笔刷快捷键冲突. 也没发现有其它作用, 直接屏蔽.
+                (bbrush_switch, {"type": "LEFT_SHIFT", "value": "ANY"}, None),
+                # ============ 原本 ============
+                # (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK", "any": False}, {"properties": [("is_click", True)]}),
+                # (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": False}, {"properties": [("is_click", False)]}),
+                # (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK", "alt": False}, {"properties": [("is_click", True)]}),
+                # (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "alt": False}, {"properties": [("is_click", False)]}),
+                # (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": False, "alt": True}, {"properties": [("is_click", False)]}),
+                # (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK", "any": True, "ctrl": True}, {"properties": [("is_click", True)]}),
+                # (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": True, "ctrl": True}, {"properties": [("is_click", False)]}),
+                # (bbrush_switch, {"type": "LEFT_CTRL", "value": "ANY"}, None),
+                # # (bbrush_switch, {"type": "LEFT_ALT", "value": "ANY"}, None),  # 避免`alt+数字键`切换笔刷快捷键冲突. 也没发现有其它作用, 直接屏蔽.
+                # (bbrush_switch, {"type": "LEFT_SHIFT", "value": "ANY"}, None),
+                # ("object.transfer_mode", {"type": "LEFTMOUSE", "value": "CLICK", "alt": True}, None),
+                # ("view3d.rotate", {"type": "RIGHTMOUSE", "value": "CLICK_DRAG"}, None),
+                # ("view3d.move", {"type": "RIGHTMOUSE", "value": "PRESS", "alt": True}, None),
+                # ("view3d.move", {"type": "MIDDLEMOUSE", "value": "PRESS", "alt": True}, None),
+                # ("view3d.zoom", {"type": "RIGHTMOUSE", "value": "PRESS", "ctrl": True}, None),
+                # ("view3d.zoom", {"type": "RIGHTMOUSE", "value": "PRESS", "alt": True}, None),
             ]
         },
     ),

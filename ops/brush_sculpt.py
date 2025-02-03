@@ -21,22 +21,6 @@ class OperatorProperty(PublicOperator, PublicDraw):
     def is_annotate_brush(self):
         return self.active_tool_name in self.annotate_brush
 
-    """
-    @property
-    def mouse_is_in_model_up(self):
-        if self.is_annotate_brush:
-            return True
-        
-        # 优化, `ray_cast`比`深度检测`开销要低, 但对在雕刻模式下, 含有多级别细分的对象无效.
-        if [i for i in bpy.context.sculpt_object.modifiers if i.type == "MULTIRES"]:
-            r = self.get_mouse_location_ray_cast(self.context, self.event)
-        else:
-            r = self.ray_cast(self.context, self.event)
-        return r
-
-        return self.is_annotate_brush or self.get_mouse_location_ray_cast(self.context, self.event)
-    """
-
     def mouse_in_area_in(self, event, area):
         return True if self.is_annotate_brush else super().mouse_in_area_in(event, area)
 
@@ -116,11 +100,14 @@ class BBrushSculpt(DepthUpdate):
         self.init_depth()
 
         self.start_mouse = self.mouse_co
+        """开始的初始鼠标位置"""
 
         self.start_buffer_scale = self.pref.depth_scale
+        """开始的左上角剪影视图Scale"""
 
         if self.is_3d_view:
-            self.in_modal = self.mouse_is_in_model_up
+            # self.in_modal = self.mouse_is_in_model_up
+            """光标在模型上, 使用GPU深度检测."""
             # print(f"1 {time.time() - self.start_time}")
             # self.start_time = time.time()
             context.window_manager.modal_handler_add(self)
@@ -149,7 +136,10 @@ class BBrushSculpt(DepthUpdate):
             return {"FINISHED"}
 
     def modal_handle(self, event: bpy.types.Event):
-        # print(f"{self.name} -> is_click: {self.is_click}, is_hit: {self.in_modal}")
+        r = bpy.ops.sculpt.brush_stroke("INVOKE_DEFAULT", True, mode="NORMAL")
+        print(r)
+        return {"FINISHED"}
+        print(f"{self.name} -> is_click: {self.is_click}, is_hit: {self.in_modal}")
         if self.in_modal:
             if self.only_alt:
                 self.smooth_brush_handle()
@@ -158,7 +148,7 @@ class BBrushSculpt(DepthUpdate):
         else:
             if self.only_alt:
                 bpy.ops.view3d.move("INVOKE_DEFAULT", True)
-            else:
+            elif not self.is_click:
                 bpy.ops.view3d.rotate("INVOKE_DEFAULT", True)
                 """
                 # 关闭下面这个好像会流畅些, 但不知道会造成什么影响

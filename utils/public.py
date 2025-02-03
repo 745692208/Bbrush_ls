@@ -419,7 +419,6 @@ class PublicClass(
     def cache_clear():
         get_pref.cache_clear()
         PublicClass.get_mouse_location_ray_cast.cache_clear()
-        PublicClass.ray_cast.cache_clear()
 
     @staticmethod
     def pref_():
@@ -513,17 +512,6 @@ class PublicClass(
     @classmethod
     def gpu_depth_ray_cast(cls, x, y, data):
         size = cls.pref_().depth_ray_size
-
-        """
-        ts = bpy.context.tool_settings
-        if ts.unified_paint_settings.use_unified_size:
-            size = ts.unified_paint_settings.size
-        else:
-            size = bpy.context.tool_settings.sculpt.brush.size
-        size = cls.dot(size)
-        # size = cls.dpi(size)
-        """
-
         _buffer = cls.get_gpu_buffer((x, y), wh=(size, size), centered=True)
         numpy_buffer = np.asarray(_buffer, dtype=np.float32).ravel()
         min_depth = np.min(numpy_buffer)
@@ -553,10 +541,10 @@ class PublicClass(
         ray_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
         ob = context.sculpt_object
         ob = ob.evaluated_get(context.evaluated_depsgraph_get())
-        r = ob.ray_cast(ray_origin, ray_vector)
+        r = ob.ray_cast(ray_origin, ray_vector)[0]
         return r
 
-    @cache
+    # @cache
     def ray_cast(self, context=bpy.context, event=None):
         """可能要遍历场景内所有对象, 开销很大. avg: 0.0012左右.
         * 具有多细分级别修改器的对象无法被识别, 淦!
@@ -568,7 +556,6 @@ class PublicClass(
         ray_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
         depsgraph: bpy.types.Depsgraph = context.evaluated_depsgraph_get()
         return depsgraph.scene_eval.ray_cast(depsgraph, ray_origin, ray_vector)[0]
-        # return depsgraph.scene_eval.ray_cast(depsgraph, ray_origin, ray_vector)
 
     @property
     def active_tool(self):
@@ -638,13 +625,14 @@ class PublicOperator(PublicClass, Operator):
 
     @property
     def mouse_is_in_model_up(self):
+        return self.get_mouse_location_ray_cast(self.context, self.event)
+        return self.ray_cast_ob(self.context, self.event)
         # 优化, `ray_cast`比`深度检测`开销要低, 但对在雕刻模式下, 含有多级别细分的对象无效.
         if [i for i in bpy.context.sculpt_object.modifiers if i.type == "MULTIRES"]:
             r = self.get_mouse_location_ray_cast(self.context, self.event)
         else:
             r = self.ray_cast(self.context, self.event)
         return r
-        return self.get_mouse_location_ray_cast(self.context, self.event)
 
     @classmethod
     def poll(cls, context):

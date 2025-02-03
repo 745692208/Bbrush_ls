@@ -1,24 +1,22 @@
-"""
 if "bpy" in locals():
     import importlib
 
     importlib.reload(brush_switch)
+    importlib.reload(key)
+    importlib.reload(reg)
 
 else:
     from .ops import (
         brush_switch,
     )
-"""
+    from .utils import (
+        key,
+        reg,
+    )
 
 import bpy
-
 from . import zh_CN
-from .utils import reg
 
-import importlib
-from .ops import brush_switch
-
-importlib.reload(brush_switch)
 
 bl_info = {
     "name": "Bbrush_ls-2025年1月31日",
