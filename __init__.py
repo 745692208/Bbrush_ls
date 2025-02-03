@@ -19,12 +19,12 @@ from . import zh_CN
 
 
 bl_info = {
-    "name": "Bbrush_ls-2025年1月31日",
+    "name": "Bbrush_ls-2025年2月4日",
     "author": "AIGODLIKE Community: 小萌新, levosaber",
     "version": (1, 2, 7),
     "blender": (4, 3, 0),
     "location": "Entering the sculpt mode will be displayed in the top bar",
-    "description": "在原版1.2.7的基础上修改成可支持4.3, 不支持向下兼容。",
+    "description": "在原版1.2.7的基础上修魔改成可支持4.3, 不支持向下兼容。",
     "category": "AIGODLIKE",
 }
 
