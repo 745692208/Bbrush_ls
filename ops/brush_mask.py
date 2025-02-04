@@ -405,6 +405,7 @@ class BBrushMask(MaskClickDrag):
     bl_options = {"REGISTER"}
 
     def invoke(self, context, event):
+        print("BBrushMask")
         self.init_invoke(context, event)
         self.cache_clear()  # 清
         self.start_time = time()

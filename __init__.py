@@ -1,21 +1,44 @@
+"""
 if "bpy" in locals():
     import importlib
 
     importlib.reload(brush_switch)
+    importlib.reload(brush_sculpt)
+    importlib.reload(brush_mask)
     importlib.reload(key)
     importlib.reload(reg)
 
 else:
     from .ops import (
         brush_switch,
+        brush_sculpt,
+        brush_mask,
     )
     from .utils import (
         key,
         reg,
     )
+"""
 
 import bpy
 from . import zh_CN
+
+# =================
+from importlib import reload
+from .ops import brush_switch
+from .ops import brush_sculpt
+from .ops import brush_mask
+from .utils import key
+from .utils import reg
+
+module_list = [
+    brush_switch,
+    brush_sculpt,
+    brush_mask,
+    key,
+    reg,
+]
+[reload(i) for i in module_list]
 
 
 bl_info = {

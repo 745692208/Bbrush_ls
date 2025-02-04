@@ -107,6 +107,7 @@ class BBrushSwitch(SwitchProperty):
     bl_options = {"REGISTER"}
 
     def invoke(self, context, event):
+        print("BBrushSwitch")
         self.init_invoke(context, event)
         log.debug(self.bl_idname)
 
@@ -282,6 +283,10 @@ class BBrushSwitch(SwitchProperty):
         return {"RUNNING_MODAL"}
 
     def switch_shift(self):
+        """针对按住`shift`或`shift&alt`和雕刻的操作行为. 使用Blender雕刻命令就行了."""
+        print("switch_shift")
+        bpy.context.area.tag_redraw()
+        return {"PASS_THROUGH"}
         settings = UnifiedPaintPanel.paint_settings(bpy.context)
         log.debug(f"event_left_mouse_press,{self.shift_alt}")
         try:
@@ -299,6 +304,7 @@ class BBrushSwitch(SwitchProperty):
         return {"PASS_THROUGH"}
 
     def update_shortcut_keys(self):
+        """切换左下角的快捷键提示文本"""
         if self.is_exit or self.is_pass:
             self.set_shortcut_keys("NORMAL")
         if self.is_hide_mode:

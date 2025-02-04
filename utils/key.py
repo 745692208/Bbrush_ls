@@ -114,6 +114,8 @@ sculpt_keys_items = (
                 # ("反转雕刻", "alt+LEFTMOUSE", "sculpt.brush_stroke", (("mode", "INVERT"), ("ignore_background_click", True))),
                 ("sculpt.brush_stroke", {"type": "LEFTMOUSE", "value": "PRESS", "alt": True}, {"properties": [("mode", "INVERT"), ("ignore_background_click", True)]}),
                 # ("雕刻 平滑", "shift+LEFTMOUSE", "sculpt.brush_stroke", (("mode", "SMOOTH"), ("ignore_background_click", True))),
+                ("sculpt.brush_stroke", {"type": "LEFTMOUSE", "value": "PRESS", "shift": True}, {"properties": [("mode", "NORMAL"), ("ignore_background_click", True)]}),
+                ("sculpt.brush_stroke", {"type": "LEFTMOUSE", "value": "PRESS", "shift": True, "alt": True}, {"properties": [("mode", "INVERT"), ("ignore_background_click", True)]}),
                 # ("sculpt.brush_stroke", {"type": "LEFTMOUSE", "value": "PRESS", "shift": True}, {"properties": [("mode", "SMOOTH"), ("ignore_background_click", True)]}),
                 # ("视图 操控 旋转", "LEFTMOUSE", "view3d.rotate", None),
                 ("view3d.rotate", {"type": "LEFTMOUSE", "value": "PRESS"}, None),
@@ -126,9 +128,9 @@ sculpt_keys_items = (
                 # Mask 和 Switch
                 (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK", "any": True, "ctrl": True}, {"properties": [("is_click", True)]}),
                 (bbrush_mask, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": True, "ctrl": True}, {"properties": [("is_click", False)]}),
+                (bbrush_switch, {"type": "LEFT_SHIFT", "value": "ANY"}, None),
                 (bbrush_switch, {"type": "LEFT_CTRL", "value": "ANY"}, None),
                 # # (bbrush_switch, {"type": "LEFT_ALT", "value": "ANY"}, None),  # 避免`alt+数字键`切换笔刷快捷键冲突. 也没发现有其它作用, 直接屏蔽.
-                (bbrush_switch, {"type": "LEFT_SHIFT", "value": "ANY"}, None),
                 # ============ 原本 ============
                 # (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK", "any": False}, {"properties": [("is_click", True)]}),
                 # (bbrush_sculpt, {"type": "LEFTMOUSE", "value": "CLICK_DRAG", "any": False}, {"properties": [("is_click", False)]}),

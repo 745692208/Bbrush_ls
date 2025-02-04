@@ -52,7 +52,7 @@ class BBrushAddonPreferences(AddonPreferences, PublicClass):
 
     depth_ray_size: IntProperty(name=_("Depth ray check size(px)"), description=_("Check if the mouse is placed over the model, mouse cursor's range size"), default=5, min=5, max=300)
 
-    show_shortcut_keys: BoolProperty(name=_("Display shortcut keys"), default=True)
+    show_shortcut_keys: BoolProperty(name=_("Display shortcut keys"), default=False)
     shortcut_offset_x: IntProperty(name=_("Shortcut key offset X"), default=20, max=114514, min=0)
     shortcut_offset_y: IntProperty(name=_("Shortcut key offset Y"), default=20, max=114514, min=0)
     shortcut_show_size: FloatProperty(name=_("Shortcut key display size"), min=0.1, default=1, max=114)
