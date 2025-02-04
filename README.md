@@ -1,3 +1,10 @@
+# 魔改说明 - 2025年2月4日
+1. 使用Blender原生功能命令替换掉BBrush雕刻工具，优点是效率高、流畅不卡顿，缺点是少功能、不能Alt+左键切换对象，只能老老实实用Alt+Q。
+1. 改了开启BBrush功能的UI位置和表现形式。
+1. 删除了Switch的Alt键，不太清楚有什么用，且和我的笔刷快捷键冲突（Alt+1/2/3/4/5/...）。
+1. Shift+Alt的反向平滑功能无效了，具体原因不知道。不常用，弃之。
+1. 切换开启与关闭BBrush功能，会遗留3个雕刻快捷键，测试没啥影响，那就能用就行。（It’s not a bug, it’s a feature!）
+
 # Bbrush
 
 This is an addon for Blender that simulates the way ZBrush sculpts.
