@@ -435,7 +435,10 @@ class PublicClass(
         def get_():
             _buffer = PublicClass.get_gpu_buffer((x, y), wh=(w, h), centered=False)
             numpy_buffer = np.asarray(_buffer, dtype=np.float32).ravel()
-            min_depth = np.min(numpy_buffer)
+            if numpy_buffer.size > 0:
+                min_depth = np.min(numpy_buffer)
+            else:
+                min_depth = 0
             data["is_in_model"] = min_depth != (0 or 1)
 
         context = bpy.context

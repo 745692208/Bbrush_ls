@@ -1,13 +1,24 @@
+# ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰
+# Base
 brush_stroke = "sculpt.brush_stroke"
 mask_lasso_gesture = "paint.mask_lasso_gesture"
 hide_show = "paint.hide_show"
 select_lasso = "view3d.select_lasso"
 f_active = {"active": False}
-
+empty_window = {"space_type": "EMPTY", "region_type": "WINDOW"}
+view_3d_window = {"space_type": "VIEW_3D", "region_type": "WINDOW"}
+empty_window_modal = {**empty_window, "modal": True}
+l_any = {"type": "LEFTMOUSE", "value": "ANY", "any": True}
+bbrush_mask = "bbrush.mask"
+bbrush_sculpt = "bbrush.bbrush_sculpt"
+bbrush_switch = "bbrush.bbrush_switch"
 view = "3D View Tool"
+
+# ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰
+# Keymaps
 sculpt_modify_keymaps = {
     "Sculpt": {
-        ("wm.call_panel", (("name", "VIEW3D_PT_sculpt_context_menu"),)): {"value": "RELEASE"},
+        # ("wm.call_panel", (("name", "VIEW3D_PT_sculpt_context_menu"),)): {"value": "RELEASE"},
         (brush_stroke, ()): f_active,
         (brush_stroke, (("mode", 0),)): f_active,
         (brush_stroke, (("mode", 1),)): f_active,
@@ -55,16 +66,6 @@ sculpt_modify_keymaps = {
         ("view3d.select", ()): f_active,
     },
 }
-
-empty_window = {"space_type": "EMPTY", "region_type": "WINDOW"}
-view_3d_window = {"space_type": "VIEW_3D", "region_type": "WINDOW"}
-empty_window_modal = {**empty_window, "modal": True}
-l_any = {"type": "LEFTMOUSE", "value": "ANY", "any": True}
-bbrush_mask = "bbrush.mask"
-bbrush_sculpt = "bbrush.bbrush_sculpt"
-bbrush_switch = "bbrush.bbrush_switch"
-
-
 sculpt_keys_items = (
     (
         "View3D Rotate Modal",
@@ -73,7 +74,7 @@ sculpt_keys_items = (
             "items": [
                 ("CONFIRM", {"type": "RIGHTMOUSE", "value": "ANY"}, None),
                 ("CONFIRM", {"type": "LEFTMOUSE", "value": "ANY"}, None),
-                ("SWITCH_TO_ZOOM", {"type": "LEFT_CTRL", "value": "ANY"}, None),
+                # ("SWITCH_TO_ZOOM", {"type": "LEFT_CTRL", "value": "ANY"}, None),
                 ("AXIS_SNAP_ENABLE", {"type": "LEFT_SHIFT", "value": "PRESS"}, None),
                 ("AXIS_SNAP_DISABLE", {"type": "LEFT_SHIFT", "value": "RELEASE"}, None),
             ]

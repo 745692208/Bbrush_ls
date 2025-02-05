@@ -30,6 +30,7 @@ from .ops import brush_sculpt
 from .ops import brush_mask
 from .utils import key
 from .utils import reg
+from .utils import public
 
 module_list = [
     brush_switch,
@@ -37,6 +38,7 @@ module_list = [
     brush_mask,
     key,
     reg,
+    public,
 ]
 [reload(i) for i in module_list]
 
