@@ -147,7 +147,14 @@ class MaskClick(MaskProperty):
                 sculpt.face_set_change_visibility(mode="TOGGLE")
         elif self.ctrl_shift:
             if in_model:
-                sculpt_invert_hide_face()
+                # sculpt_invert_hide_face()
+                # 有个Bug, 必须得松开组合键, 重新按才能识别触发时鼠标停留位置的Face的面组.
+                ob = bpy.context.sculpt_object
+                print((self.event.mouse_region_x, self.event.mouse_region_y))
+                if any([i.hide for i in ob.data.polygons]):
+                    bpy.ops.sculpt.face_set_change_visibility(mode='HIDE_ACTIVE')
+                else:
+                    bpy.ops.sculpt.face_set_change_visibility(mode='TOGGLE')
             else:
                 paint.hide_show("EXEC_DEFAULT", True, action="SHOW", area="Inside")
         self.handler_remove()
@@ -335,7 +342,7 @@ class MaskClickDrag(MaskDrawArea):
             log.debug(f"move,{move, have_tmp}")
             self.start_mouse -= move
             setattr(self, "mouse_co_tmp", self.mouse_co)
-            for index, _ in enumerate(self.mouse_pos):
+            for index, co in enumerate(self.mouse_pos):
                 self.mouse_pos[index] = self.mouse_pos[index] - move
 
         if self.event_is_space:
@@ -426,13 +433,14 @@ class BBrushMask(MaskClickDrag):
 
         log.debug(
             f"""modal {
-        self.start_mouse,
-        self.mouse_co,
-        event.mouse_region_x,
-        event.mouse_region_y,
-        event,
-        event.type,
-        event.value,}"""
+                self.start_mouse,
+                self.mouse_co,
+                event.mouse_region_x,
+                event.mouse_region_y,
+                event,
+                event.type,
+                event.value
+            }"""
         )
         if self.event_is_esc or self.is_exit_modal:
             self.handler_remove()

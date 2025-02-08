@@ -326,7 +326,7 @@ def close_conflict_keys(is_unregister=False):
     kc = wm.keyconfigs.user
     km = kc.keymaps.get("3D View")
     for kmi in km.keymap_items:
-        if kmi.idname in a:
+        if kmi.idname in a and kmi.type not in ["WHEELUPMOUSE", "WHEELDOWNMOUSE", "WHEELINMOUSE", "WHEELOUTMOUSE"]:
             kmi.active = True if is_unregister else False
 
 
