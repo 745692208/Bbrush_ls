@@ -43,7 +43,8 @@ class MaskProperty(PublicOperator, PublicDraw):
         return Vector((0, 0, 0, self.alpha))
 
     @property
-    def is_polygon_mode(self):
+    def is_polygon_mode(self) -> bool:
+        """self.active_tool_name == "bbrush.polygon_mask" """
         return self.active_tool_name == "bbrush.polygon_mask"
 
     is_box_mode = False
