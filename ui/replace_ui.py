@@ -72,9 +72,13 @@ def append_top_editor_menus2(self, context):
         layout.separator()
         sub_row = layout.row(align=1)
         text = "Bbrush" if pref.show_text else ""
-        if not pref.always_use_sculpt_mode:
+
+        if not pref.sculpt:
             sub_row.prop(pref, "sculpt", text=text, icon="SCULPTMODE_HLT")
+        elif pref.always_use_sculpt_mode:
+            sub_row.prop(pref, "always_use_sculpt_mode", emboss=True, icon="AUTO", text="")
         else:
+            sub_row.prop(pref, "sculpt", text=text, icon="SCULPTMODE_HLT")
             sub_row.prop(pref, "always_use_sculpt_mode", emboss=True, icon="AUTO", text="")
         if pref.sculpt:
             sub_row.popover(panel="VIEW3D_PT_editor_menus_bbrush_options", text="", icon="PREFERENCES")

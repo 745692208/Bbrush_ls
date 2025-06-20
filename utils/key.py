@@ -330,11 +330,44 @@ def close_conflict_keys(is_unregister=False):
             kmi.active = True if is_unregister else False
 
 
+def set_brushes_setting():
+    import bpy
+
+    def set_brush(name: str):
+        path = f"brushes\\essentials_brushes-mesh_sculpt.blend\\Brush\\{name}"
+        bpy.ops.brush.asset_activate(
+            asset_library_type="ESSENTIALS",
+            asset_library_identifier="",
+            relative_asset_identifier=path,
+        )
+        return bpy.context.tool_settings.sculpt.brush
+
+    """对常用笔刷, 启用压力大小."""
+    print("set_brushes_setting")
+    brush_names = [
+        "Draw",  # 2
+        "Draw Sharp",  # alt+2
+        "Clay",  # 3
+        "Clay Strips",  # alt+3
+        "Scrape/Fill",  # 4
+        "Trim",  # alt+4
+        "Inflate/Deflate",  # 6
+    ]
+    current_brush = bpy.context.tool_settings.sculpt.brush
+    for name in brush_names:
+        brush = set_brush(name)
+        brush.use_pressure_size = True
+    set_brush(current_brush.name)
+
+
+
+
 def change_keymap(is_modify: bool):
     modify_keymap(sculpt_modify_keymaps, is_modify)
 
 
 def register():
+    set_brushes_setting()
     close_conflict_keys()
     change_keymap(True)
     keymap_register(sculpt_keys_items)
