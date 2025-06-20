@@ -14,6 +14,7 @@ from bpy_extras import view3d_utils
 
 from .log import log
 from ..src.shortcut_keys import SHORTCUT_KEYS
+from ..ops import sculpt_operator
 
 ADDON_NAME = basename(dirname(dirname(realpath(__file__))))
 
@@ -581,7 +582,7 @@ class PublicClass(
     @classmethod
     def set_active_brush(cls, brush: bpy.types.Brush):
         """`bpy.context.tool_settings.sculpt.brush = brush`"""
-        bpy.context.tool_settings.sculpt.brush = brush
+        sculpt_operator.set_active_brush(brush)
 
 
 @cache
