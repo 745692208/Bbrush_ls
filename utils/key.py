@@ -344,6 +344,25 @@ def set_brushes_setting():
 
     """对常用笔刷, 启用压力大小."""
     print("set_brushes_setting")
+
+    brush_data = [
+        ("Draw", True, True, 0.5, 10),
+        ("Draw Sharp", True, True, 0.5, 10),
+        ("Clay", True, False, 0.9, 75),
+        ("Clay Strips", True, True, 0.5, 10),
+        ("Scrape/Fill", False, True, 0.9, 75),
+        ("Trim", True, False, 0.9, 75),
+        ("Inflate/Deflate", True, False, 0.9, 75),
+    ]
+    current_brush = bpy.context.tool_settings.sculpt.brush
+    for item in brush_data:
+        brush = set_brush(item[0])
+        brush.use_pressure_size = item[1]
+        # 防抖
+        brush.use_smooth_stroke = item[2]
+        brush.smooth_stroke_factor = item[3]
+        brush.smooth_stroke_radius = item[4]
+    """
     brush_names = [
         "Draw",  # 2
         "Draw Sharp",  # alt+2
@@ -353,13 +372,11 @@ def set_brushes_setting():
         "Trim",  # alt+4
         "Inflate/Deflate",  # 6
     ]
-    current_brush = bpy.context.tool_settings.sculpt.brush
     for name in brush_names:
         brush = set_brush(name)
         brush.use_pressure_size = True
+    """
     set_brush(current_brush.name)
-
-
 
 
 def change_keymap(is_modify: bool):
