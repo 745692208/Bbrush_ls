@@ -350,7 +350,7 @@ def set_brushes_setting():
         ("Draw Sharp", True, True, 0.5, 10),
         ("Clay", True, False, 0.9, 75),
         ("Clay Strips", True, True, 0.5, 10),
-        ("Scrape/Fill", False, True, 0.9, 75),
+        ("Scrape/Fill", True, False, 0.9, 75),
         ("Trim", True, False, 0.9, 75),
         ("Inflate/Deflate", True, False, 0.9, 75),
     ]
