@@ -146,7 +146,8 @@ class BBrushSwitch(SwitchProperty):
         # print(f"    {press}, {self.only_shift}")
 
         if self.only_shift and self.active_brush.name != "Smooth":  # 切换到Smooth Brush
-            self.set_active_brush(bpy.data.brushes.get("Smooth"))
+            if self.active_brush.name != "Relax Slide":
+                self.set_active_brush(bpy.data.brushes.get("Smooth"))
         """
         if self.only_shift:  # 切换到Smooth Brush
             # if self.active_brush.name != "Smooth":
