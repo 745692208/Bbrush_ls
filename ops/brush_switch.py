@@ -273,7 +273,8 @@ class BBrushSwitch(SwitchProperty):
         shift_ops = self.only_shift and not self.event_is_left
 
         if self.event_is_left and not self.mouse_is_in_model_up:
-            bpy.ops.view3d.view_roll("INVOKE_DEFAULT", type="ANGLE")
+            # 不好用, 不用了.
+            # bpy.ops.view3d.view_roll("INVOKE_DEFAULT", type="ANGLE")
             return {"PASS_THROUGH"}
         elif self.event_is_f or self.event_is_r or shift_ops:
             return {"PASS_THROUGH"}

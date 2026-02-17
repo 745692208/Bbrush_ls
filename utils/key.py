@@ -22,7 +22,7 @@ sculpt_modify_keymaps = {
         (brush_stroke, ()): f_active,
         (brush_stroke, (("mode", 0),)): f_active,
         (brush_stroke, (("mode", 1),)): f_active,
-        (brush_stroke, (("mode", 2),)): f_active,
+        # (brush_stroke, (("mode", 2),)): f_active,  # 平滑
         (mask_lasso_gesture, ()): f_active,
         (mask_lasso_gesture, (("value", 1.0),)): {"ctrl": True},
         (mask_lasso_gesture, (("value", 0.0),)): {"alt": True},
@@ -66,6 +66,7 @@ sculpt_modify_keymaps = {
         ("view3d.select", ()): f_active,
     },
 }
+"""启用Bbrush时, 需要关闭的快捷键."""
 sculpt_keys_items = (
     (
         "View3D Rotate Modal",
@@ -331,6 +332,7 @@ def close_conflict_keys(is_unregister=False):
 
 
 def set_brushes_setting():
+    """对常用笔刷, 启用压力大小."""
     import bpy
 
     def set_brush(name: str):
@@ -342,9 +344,9 @@ def set_brushes_setting():
         )
         return bpy.context.tool_settings.sculpt.brush
 
-    """对常用笔刷, 启用压力大小."""
     print("set_brushes_setting")
 
+    # 笔刷, 压力尺寸, 防抖, 防抖因子, 防抖半径
     brush_data = [
         ("Draw", True, True, 0.5, 10),
         ("Draw Sharp", True, True, 0.5, 10),
@@ -362,28 +364,17 @@ def set_brushes_setting():
         brush.use_smooth_stroke = item[2]
         brush.smooth_stroke_factor = item[3]
         brush.smooth_stroke_radius = item[4]
-    """
-    brush_names = [
-        "Draw",  # 2
-        "Draw Sharp",  # alt+2
-        "Clay",  # 3
-        "Clay Strips",  # alt+3
-        "Scrape/Fill",  # 4
-        "Trim",  # alt+4
-        "Inflate/Deflate",  # 6
-    ]
-    for name in brush_names:
-        brush = set_brush(name)
-        brush.use_pressure_size = True
-    """
+
     set_brush(current_brush.name)
 
 
 def change_keymap(is_modify: bool):
+    """is_modify: 是否修改"""
     modify_keymap(sculpt_modify_keymaps, is_modify)
 
 
 def register():
+    # 切换Bbrush属性按钮, 会执行注册与反注册函数.
     set_brushes_setting()
     close_conflict_keys()
     change_keymap(True)
@@ -391,6 +382,7 @@ def register():
 
 
 def unregister():
+    # 切换Bbrush属性按钮, 会执行注册与反注册函数.
     close_conflict_keys(True)
     change_keymap(False)
     keymap_unregister(sculpt_keys_items)
