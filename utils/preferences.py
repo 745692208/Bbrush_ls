@@ -2,13 +2,12 @@ from functools import cache
 import bpy
 from bpy.app.translations import pgettext as _
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty
-from bpy_types import AddonPreferences
 
 from . import key
 from .public import ADDON_NAME, PublicClass
 
 
-class BBrushAddonPreferences(AddonPreferences, PublicClass):
+class BBrushAddonPreferences(bpy.types.AddonPreferences, PublicClass):
     bl_idname = ADDON_NAME
     use_mouse_emulate_3_button: BoolProperty()
 
