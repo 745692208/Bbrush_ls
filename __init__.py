@@ -1,25 +1,3 @@
-"""
-if "bpy" in locals():
-    import importlib
-
-    importlib.reload(brush_switch)
-    importlib.reload(brush_sculpt)
-    importlib.reload(brush_mask)
-    importlib.reload(key)
-    importlib.reload(reg)
-
-else:
-    from .ops import (
-        brush_switch,
-        brush_sculpt,
-        brush_mask,
-    )
-    from .utils import (
-        key,
-        reg,
-    )
-"""
-
 import bpy
 from . import zh_CN
 

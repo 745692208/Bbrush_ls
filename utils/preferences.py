@@ -14,9 +14,6 @@ class BBrushAddonPreferences(bpy.types.AddonPreferences, PublicClass):
     layout: bpy.types.UILayout
 
     def sculpt_update(self, context):
-        from ..ui.replace_ui import update_top_bar
-
-        update_top_bar()
         inputs = context.preferences.inputs
         from .bbrush_toolbar import BrushTool
 
@@ -32,8 +29,6 @@ class BBrushAddonPreferences(bpy.types.AddonPreferences, PublicClass):
         self.tag_all_redraw(context)
 
     sculpt: BoolProperty(name="Bbrush", default=False, options={"SKIP_SAVE"}, update=sculpt_update)
-
-    show_text: BoolProperty(name=_("Display top text"), default=False)
 
     depth_display_items = (
         ("ALWAYS_DISPLAY", "DisplayedAllTheTime", "Keep the silhouette displayed all the time, even when not in sculpting mode"),
@@ -56,12 +51,6 @@ class BBrushAddonPreferences(bpy.types.AddonPreferences, PublicClass):
     shortcut_offset_y: IntProperty(name=_("Shortcut key offset Y"), default=20, max=114514, min=0)
     shortcut_show_size: FloatProperty(name=_("Shortcut key display size"), min=0.1, default=1, max=114)
 
-    def update_top(self, context):
-        from ..ui.replace_ui import update_top_bar
-
-        update_top_bar()
-
-    replace_top_bar: BoolProperty(name="Replace top bar", default=True, update=update_top)
     alignment: EnumProperty(
         items=[
             ("LEFT", "LIFT", ""),
@@ -71,68 +60,16 @@ class BBrushAddonPreferences(bpy.types.AddonPreferences, PublicClass):
         default="CENTER",
     )
 
-    def draw(self, context):
-        draw_(self.layout, context)
-
 
 @cache
 def get_pref():
     return bpy.context.preferences.addons[ADDON_NAME].preferences
 
 
-class VIEW3D_PT_editor_menus_bbrush_options(bpy.types.Panel):
-    bl_idname = "VIEW3D_PT_editor_menus_bbrush_options"
-    bl_label = "BBrush Options"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "WINDOW"
-    bl_ui_units_x = 20
-
-    def draw(self, context):
-        draw_(self.layout, context)
-
-
-def draw_(layout: bpy.types.UILayout, context=bpy.context):
-    """UI"""
-    pref = get_pref()
-    layout = layout
-
-    box = layout.box()
-    box.prop(pref, "always_use_sculpt_mode")
-    row = box.row(align=True)
-    row.prop(pref, "depth_display_mode")
-    row.prop(pref, "depth_ray_size")
-    layout.separator()
-
-    layout.label(text="顶部栏")
-    row = layout.box().row(align=True)
-    row.prop(pref, "show_text")
-    # row.prop(pref, "replace_top_bar")
-    # row.prop(pref, "alignment")
-    layout.separator()
-
-    layout.label(text="Silhouette")
-    box = layout.box()
-    box.prop(pref, "depth_scale")
-    row = box.row(align=True)
-    row.prop(pref, "depth_offset_x")
-    row.prop(pref, "depth_offset_y")
-    layout.separator()
-
-    layout.label(text="Shortcut")
-    box = layout.box()
-    box.prop(pref, "show_shortcut_keys")
-    box.prop(pref, "shortcut_show_size")
-    row = box.row(align=True)
-    row.prop(pref, "shortcut_offset_x")
-    row.prop(pref, "shortcut_offset_y")
-
-
 def register():
     bpy.utils.register_class(BBrushAddonPreferences)
-    bpy.utils.register_class(VIEW3D_PT_editor_menus_bbrush_options)
 
 
 def unregister():
     bpy.utils.unregister_class(BBrushAddonPreferences)
-    bpy.utils.unregister_class(VIEW3D_PT_editor_menus_bbrush_options)
     key.unregister()
